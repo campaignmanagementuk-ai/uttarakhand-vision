@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uttarakhand Vision - Devbhoomi Ki Har Awaaz</title>
+    
+    <!-- FontAwesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --dark: #111;
+            --light: #f4f6f9;
+            --border: #e0e0e0;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 0; color: #333; }
+        
+        /* Top Bar & Header */
+        .top-bar { background: var(--dark); color: #fff; padding: 6px 20px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
+        .main-header { background: #fff; padding: 15px 20px; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .logo-area img { max-height: 60px; }
+        .header-banner img { max-height: 65px; border-radius: 4px; }
+        .tagline { font-size: 13px; color: #666; font-style: italic; margin-top: 4px; }
+
+        /* Breaking Ticker */
+        .breaking-box { background: #b71c1c; color: #fff; display: flex; align-items: center; overflow: hidden; height: 38px; }
+        .breaking-title { background: #000; padding: 0 15px; font-weight: bold; height: 100%; display: flex; align-items: center; white-space: nowrap; font-size: 14px; }
+        .ticker-text { white-space: nowrap; animation: ticker 22s linear infinite; padding-left: 100%; font-size: 14px; }
+        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
+
+        /* Navigation Bar */
+        .nav-bar { background: #222; display: flex; overflow-x: auto; white-space: nowrap; }
+        .nav-bar a { color: #fff; text-decoration: none; padding: 12px 18px; font-size: 14px; font-weight: 500; transition: 0.3s; }
+        .nav-bar a:hover, .nav-bar a.active { background: var(--primary); }
+
+        /* Main Container */
+        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        @media(max-width: 768px) { .container { grid-template-columns: 1fr; } }
+
+        /* Cards & Components */
+        .section-header { border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 15px; color: var(--primary); font-size: 18px; font-weight: bold; text-transform: uppercase; }
+        .card { background: #fff; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+        
+        /* Media Display */
+        .news-media { width: 100%; max-height: 380px; object-fit: cover; border-radius: 5px; margin-bottom: 12px; }
+        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-bottom: 12px; border-radius: 5px; background: #000; }
+        .video-container iframe, .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
+
+        /* News Item Grid */
+        .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        @media(max-width: 500px) { .news-grid { grid-template-columns: 1fr; } }
+        
+        .news-item { border: 1px solid var(--border); border-radius: 5px; padding: 10px; background: #fff; }
+        .news-item h4 { margin: 8px 0; font-size: 15px; color: #111; line-height: 1.3; }
+        .meta { font-size: 11px; color: #777; margin-bottom: 6px; }
+
+        /* Hindi E-Newspaper Styling */
+        .epaper-wrapper {
+            background: #fffdfa; /* Newsprint background */
+            border: 3px double #222;
+            padding: 20px;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .epaper-header {
+            text-align: center;
+            border-bottom: 3px double #111;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .epaper-brand {
+            font-size: 38px;
+            font-weight: 900;
+            color: #b71c1c;
+            letter-spacing: 1px;
+            margin: 0;
+            font-family: 'Georgia', serif;
+        }
+
+        .epaper-tagline {
+            font-size: 14px;
+            font-weight: 600;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        .epaper-meta-bar {
+            display: flex;
+            justify-content: space-between;
+            border-top: 2px solid #222;
+            border-bottom: 2px solid #222;
+            margin-top: 12px;
+            padding: 6px 12px;
+            font-size: 13px;
+            font-weight: bold;
+            background: #f2ebd9;
+            color: #111;
+        }
+
+        /* Sidebar Ads */
+        .ad-box { margin-bottom: 20px; text-align: center; }
+        .ad-box img { width: 100%; border-radius: 5px; }
+
+        /* Footer */
+        .footer { background: var(--dark); color: #fff; padding: 25px 15px; text-align: center; font-size: 13px; margin-top: 30px; }
+        .social-links a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: bold; font-size: 14px; }
+        .social-links a:hover { color: var(--primary); }
+
+        /* 🖨️ Professional Newspaper Print Rules */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #epaperSection, #epaperSection * {
+                visibility: visible;
+            }
+            #epaperSection {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                margin: 0;
+                padding: 0;
+                box-shadow: none;
+                border: none;
+            }
+            .epaper-wrapper {
+                border: 2px solid #000;
+                background: #fff;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Info Bar -->
+    <div class="top-bar">
+        <span id="currentDate">Uttarakhand Vision Portal</span>
+        <div class="social-links" id="socialLinksHeader"></div>
+    </div>
+
+    <!-- Header Section -->
+    <div class="main-header">
+        <div class="logo-area">
+            <div id="siteLogo"><h2 style="color:var(--primary); margin:0;">Uttarakhand Vision</h2></div>
+            <div class="tagline" id="siteTagline">Sach Sabse Pehle, Devbhoomi Ki Har Awaaz</div>
+        </div>
+        <div class="header-banner" id="siteBanner"></div>
+    </div>
+
+    <!-- Breaking News Ticker -->
+    <div class="breaking-box">
+        <div class="breaking-title">🔴 BREAKING</div>
+        <div class="ticker-text" id="breakingTicker">Khabrein load ho rahi hain...</div>
+    </div>
+
+    <!-- Main Navigation Bar -->
+    <div class="nav-bar">
+        <a href="#" class="active" onclick="filterCategory('all', this)">गृह पृष्ठ (Home)</a>
+        <a href="#district" onclick="filterCategory('District', this)">राज्य / ज़िला समाचार</a>
+        <a href="#crime" onclick="filterCategory('Crime', this)">क्राइम</a>
+        <a href="#politics" onclick="filterCategory('Politics', this)">राजनीति</a>
+        <a href="#epaper" onclick="filterCategory('epaper', this)">📰 ई-समाचार पत्र (Weekly)</a>
+    </div>
+
+    <!-- Main Container Layout -->
+    <div class="container">
+        
+        <!-- Left Column: News Content -->
+        <div class="main-content">
+            
+            <!-- Featured Slider / Main Headline -->
+            <div class="card" id="sliderSection">
+                <div class="section-header">🔥 Badi Khabar (Featured)</div>
+                <div id="mainSlider">Loading headline...</div>
+            </div>
+
+            <!-- News Feeds Grid -->
+            <div class="card">
+                <div class="section-header" id="feedTitle">📰 Taza Samachar</div>
+                <div class="news-grid" id="newsFeed">Loading news...</div>
+            </div>
+
+            <!-- E-Newspaper Section (Auto Weekly Edition) -->
+            <div class="card" id="epaperSection">
+                <div class="section-header">📰 ई-समाचार पत्र (साप्ताहिक संस्करण)</div>
+                
+                <div class="epaper-wrapper">
+                    <!-- Masthead -->
+                    <div class="epaper-header">
+                        <h1 class="epaper-brand">उत्तराखंड विज़न</h1>
+                        <div class="epaper-tagline">देवभूमि का निष्पक्ष एवं विश्वसनीय साप्ताहिक समाचार पत्र</div>
+                        <div class="epaper-meta-bar">
+                            <span>📍 स्थान: हल्द्वानी (उत्तराखंड)</span>
+                            <span id="epaperIssueDate">📅 अंक तिथि: लोड हो रहा है...</span>
+                            <span>🗞️ साप्ताहिक अंक | मूल्य: निःशुल्क</span>
+                        </div>
+                    </div>
+
+                    <!-- E-Paper Auto Generated Content -->
+                    <div class="epaper-body" id="epaperContent">
+                        <p style="text-align:center; padding: 20px;">साप्ताहिक ई-पेपर तैयार हो रहा है...</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Sidebar Ads & Additional Content -->
+        <div class="sidebar">
+            
+            <!-- Top Ad Banner -->
+            <div class="ad-box" id="topAd"></div>
+
+            <!-- Quick Info Card -->
+            <div class="card">
+                <div class="section-header">📌 Uttarakhand Quick Updates</div>
+                <p style="font-size:13px; color:#555;">Devbhoomi Uttarakhand ke sabhi 13 jilon ki breaking aur exclusive khabrein yahan padhein.</p>
+            </div>
+
+            <!-- Middle Ad Banner -->
+            <div class="ad-box" id="middleAd"></div>
+
+        </div>
+
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="social-links" id="socialLinksFooter" style="margin-bottom:12px;"></div>
+        <p>© 2026 Uttarakhand Vision. All Rights Reserved.</p>
+    </div>
+
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWxB-KOkWNn2Z4sRUtLQuTxy-ZUCNxK1s",
+            authDomain: "uttarakhand-vision.firebaseapp.com",
+            databaseURL: "https://uttarakhand-vision-default-rtdb.firebaseio.com",
+            projectId: "uttarakhand-vision",
+            storageBucket: "uttarakhand-vision.firebasestorage.app",
+            messagingSenderId: "72349034061",
+            appId: "1:72349034061:web:2a9cfce56aaf04d5ef1e04",
+            measurementId: "G-X5F72XCJ2T"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let allNewsData = {};
+
+        window.onload = function() {
+            document.getElementById('currentDate').innerText = getHindiFormattedDate(new Date());
+            loadSettings();
+            loadBreakingNews();
+            loadApprovedNews();
+            loadAds();
+            loadEPaper();
+        };
+
+        // Date Format Helper (Pure Hindi Date)
+        function getHindiFormattedDate(dateObj) {
+            return dateObj.toLocaleDateString('hi-IN', { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric' 
+            });
+        }
+
+        // Print & Save PDF Trigger (Download wale din ki date dikhayega)
+        function printEPaper() {
+            document.getElementById('epaperIssueDate').innerText = `📅 अंक तिथि (डाउनलोड): ${getHindiFormattedDate(new Date())}`;
+            window.print();
+        }
+
+        // Render Media Helper (Photo, HTML5 Video, Youtube Embed & Shorts Support)
+        function renderMedia(item) {
+            if (item.videoUrl) {
+                return `<div class="video-container"><video controls src="${item.videoUrl}"></video></div>`;
+            }
+            if (item.youtubeUrl) {
+                // Enhanced Regular Expression for Standard YouTube URLs, Shorts, and Mobile Links
+                let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+                let match = item.youtubeUrl.match(regExp);
+                let embedId = (match && match[2].length === 11) ? match[2] : null;
+                
+                if (embedId) {
+                    return `<div class="video-container"><iframe src="https://www.youtube.com/embed/${embedId}" allowfullscreen frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
+                }
+            }
+            if (item.image) {
+                return `<img src="${item.image}" class="news-media" alt="News Image">`;
+            }
+            return '';
+        }
+
+        // 1. Fetch Approved Live News
+        function loadApprovedNews() {
+            db.ref('approvedNews').on('value', snap => {
+                allNewsData = snap.val() || {};
+                renderPortalNews(allNewsData);
+            });
+        }
+
+        function renderPortalNews(data) {
+            const keys = Object.keys(data).reverse();
+            const sliderBox = document.getElementById('mainSlider');
+            const feedBox = document.getElementById('newsFeed');
+
+            feedBox.innerHTML = '';
+            
+            if(keys.length === 0) {
+                sliderBox.innerHTML = '<p>Abhi koi news uplabdh nahi hai.</p>';
+                feedBox.innerHTML = '<p>Taza khabrein jald hi update hongi.</p>';
+                return;
+            }
+
+            // Slider News Item
+            let sliderItem = keys.find(k => data[k].placements && data[k].placements.slider) || keys[0];
+            let itemS = data[sliderItem];
+            
+            sliderBox.innerHTML = `
+                ${renderMedia(itemS)}
+                <div class="meta">📍 ${itemS.district || 'Uttarakhand'} | 👤 ${itemS.reporterName || 'Admin'}</div>
+                <h3 style="margin: 5px 0 10px 0; color:#111;">${itemS.title}</h3>
+                <p style="font-size:14px; line-height:1.4;">${itemS.content}</p>
+            `;
+
+            // Grid Items
+            keys.forEach(k => {
+                let item = data[k];
+                feedBox.innerHTML += `
+                    <div class="news-item">
+                        ${renderMedia(item)}
+                        <div class="meta">📍 ${item.district || 'Uttarakhand'} | 📌 ${item.category}</div>
+                        <h4>${item.title}</h4>
+                        <p style="font-size:13px; color:#555;">${item.content.substring(0, 100)}...</p>
+                    </div>
+                `;
+            });
+        }
+
+        // Navigation Filter Function
+        function filterCategory(cat, btn) {
+            if(btn) {
+                document.querySelectorAll('.nav-bar a').forEach(a => a.classList.remove('active'));
+                btn.classList.add('active');
+            }
+
+            if(cat === 'epaper') {
+                document.getElementById('sliderSection').style.display = 'none';
+                document.getElementById('epaperSection').scrollIntoView({ behavior: 'smooth' });
+                return;
+            } else {
+                document.getElementById('sliderSection').style.display = 'block';
+            }
+
+            if(cat === 'all') {
+                renderPortalNews(allNewsData);
+                document.getElementById('feedTitle').innerText = '📰 Taza Samachar';
+                return;
+            }
+
+            const filtered = {};
+            for(let k in allNewsData) {
+                if(allNewsData[k].category === cat || allNewsData[k].district === cat) {
+                    filtered[k] = allNewsData[k];
+                }
+            }
+
+            document.getElementById('feedTitle').innerText = `📰 ${cat} Khabrein`;
+            renderPortalNews(filtered);
+        }
+
+        // 2. Fetch Breaking News Ticker
+        function loadBreakingNews() {
+            db.ref('breakingNews').on('value', snap => {
+                const data = snap.val() || {};
+                const list = Object.values(data).map(i => i.text);
+                const ticker = document.getElementById('breakingTicker');
+                if(list.length > 0) {
+                    ticker.innerText = list.join('   --- 🔴 ---   ');
+                } else {
+                    ticker.innerText = 'Uttarakhand Vision Par Apka Swagat Hai.';
+                }
+            });
+        }
+
+        // 3. AUTOMATIC WEEKLY E-PAPER GENERATOR (Pichhle 7 Dino Ki Approved News Se Swatah Banega)
+        function loadEPaper() {
+            db.ref('approvedNews').on('value', snap => {
+                const data = snap.val() || {};
+                const container = document.getElementById('epaperContent');
+                const dateSpan = document.getElementById('epaperIssueDate');
+                
+                // Set Header Issue Date to Today
+                dateSpan.innerText = `📅 अंक तिथि: ${getHindiFormattedDate(new Date())}`;
+
+                const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
+                const weeklyNewsList = [];
+
+                // Filter last 7 days news
+                for (let key in data) {
+                    let item = data[key];
+                    let itemTimestamp = item.createdAt || item.timestamp || Date.now();
+                    if (!item.isBreaking && itemTimestamp >= oneWeekAgo) {
+                        weeklyNewsList.push({
+                            ...item,
+                            time: itemTimestamp
+                        });
+                    }
+                }
+
+                // Sort: Latest News Date First
+                weeklyNewsList.sort((a, b) => b.time - a.time);
+
+                if (weeklyNewsList.length === 0) {
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:30px 10px;">
+                            <h3>📰 उत्तराखंड विज़न - साप्ताहिक अंक (हल्द्वानी)</h3>
+                            <p style="color:#666;">इस सप्ताह की कोई मुख्य ख़बर उपलब्ध नहीं है।</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                // Date-wise Grouping for Newspaper Layout
+                const groupedByDate = {};
+                weeklyNewsList.forEach(item => {
+                    let newsDate = getHindiFormattedDate(new Date(item.time));
+                    if (!groupedByDate[newsDate]) {
+                        groupedByDate[newsDate] = [];
+                    }
+                    groupedByDate[newsDate].push(item);
+                });
+
+                // Generate Newspaper Layout
+                let paperHtml = `
+                    <div class="no-print" style="margin-bottom:20px; text-align:center;">
+                        <button onclick="printEPaper()" style="padding:12px 25px; background:#2e7d32; color:#fff; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:15px; box-shadow:0 3px 6px rgba(0,0,0,0.2);">
+                            🖨️ साप्ताहिक समाचार पत्र प्रिंट / PDF डाउनलोड करें
+                        </button>
+                    </div>
+                    <div class="epaper-print-container">
+                `;
+
+                for (let dateHeading in groupedByDate) {
+                    paperHtml += `
+                        <div style="border-bottom: 2px solid #b71c1c; margin: 20px 0 10px 0; padding-bottom: 4px;">
+                            <h3 style="margin: 0; color: #b71c1c; font-size: 18px; font-family:'Georgia', serif;">
+                                🗓️ समाचार दिनांक: ${dateHeading}
+                            </h3>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
+                    `;
+
+                    groupedByDate[dateHeading].forEach(news => {
+                        paperHtml += `
+                            <div style="border: 1px solid #ccc; padding: 12px; background: #fff; border-radius: 4px;">
+                                ${news.image ? `<img src="${news.image}" style="width:100%; max-height:180px; object-fit:cover; margin-bottom:8px; border:1px solid #eee;">` : ''}
+                                <div style="font-size:11px; color:#666; font-weight:bold; margin-bottom:4px;">
+                                    📍 ${news.district || 'उत्तराखंड'} | 📌 ${news.category || 'सामान्य'}
+                                </div>
+                                <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #111; line-height:1.3;">${news.title}</h4>
+                                <p style="margin: 0; font-size: 13px; color: #333; line-height: 1.4; text-align:justify;">${news.content}</p>
+                            </div>
+                        `;
+                    });
+
+                    paperHtml += `</div>`;
+                }
+
+                paperHtml += `</div>`;
+                container.innerHTML = paperHtml;
+            });
+        }
+
+        // 4. Advertisements Loader
+        function loadAds() {
+            db.ref('ads').on('value', snap => {
+                const ads = snap.val() || {};
+                if(ads.top && ads.top.imageUrl) {
+                    document.getElementById('topAd').innerHTML = `<a href="${ads.top.targetUrl || '#'}" target="_blank"><img src="${ads.top.imageUrl}"></a>`;
+                }
+                if(ads.middle && ads.middle.imageUrl) {
+                    document.getElementById('middleAd').innerHTML = `<a href="${ads.middle.targetUrl || '#'}" target="_blank"><img src="${ads.middle.imageUrl}"></a>`;
+                }
+            });
+        }
+
+        // 5. Site Branding & Social Links Loader (Updated & Fixed)
+        function loadSettings() {
+            db.ref('siteSettings').on('value', snap => {
+                const data = snap.val() || {};
+
+                if(data.tagline) {
+                    document.getElementById('siteTagline').innerText = data.tagline;
+                }
+
+                if(data.branding) {
+                    if(data.branding.logoUrl) {
+                        document.getElementById('siteLogo').innerHTML = `<img src="${data.branding.logoUrl}" style="max-height:55px;">`;
+                    }
+                    if(data.branding.bannerUrl) {
+                        document.getElementById('siteBanner').innerHTML = `<img src="${data.branding.bannerUrl}">`;
+                    }
+                }
+
+                // Handle Social Media Links Dynamic Display with FontAwesome Icons
+                if(data.social) {
+                    let socialLinksArray = [];
+
+                    if(data.social.facebook) {
+                        socialLinksArray.push(`<a href="${data.social.facebook}" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i> Facebook</a>`);
+                    }
+                    if(data.social.youtube) {
+                        socialLinksArray.push(`<a href="${data.social.youtube}" target="_blank" title="YouTube"><i class="fab fa-youtube"></i> YouTube</a>`);
+                    }
+                    if(data.social.whatsapp) {
+                        socialLinksArray.push(`<a href="${data.social.whatsapp}" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i> WhatsApp</a>`);
+                    }
+                    if(data.social.twitter) {
+                        socialLinksArray.push(`<a href="${data.social.twitter}" target="_blank" title="Twitter"><i class="fab fa-x-twitter"></i> Twitter</a>`);
+                    }
+                    if(data.social.instagram) {
+                        socialLinksArray.push(`<a href="${data.social.instagram}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i> Instagram</a>`);
+                    }
+
+                    const socialHtml = socialLinksArray.join(' | ');
+                    document.getElementById('socialLinksHeader').innerHTML = socialHtml;
+                    document.getElementById('socialLinksFooter').innerHTML = socialHtml;
+                }
+            });
+        }
+    </script>
+</body>
+</html>

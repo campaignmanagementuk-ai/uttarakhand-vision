@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporter / Sub-Admin Panel - Uttarakhand Vision</title>
+    
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --dark: #111;
+            --light: #f4f6f9;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 0; }
+        
+        .login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: #fff; padding: 30px; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .login-box h2 { color: var(--primary); margin-top: 0; text-align: center; }
+
+        .header { background: var(--dark); color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { margin: 0; font-size: 20px; color: var(--primary); }
+
+        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
+        .card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .card-header { border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 20px; color: var(--primary); font-size: 18px; font-weight: bold; }
+
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-weight: bold; margin-bottom: 6px; color: #333; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        textarea { height: 120px; resize: vertical; }
+
+        .btn { padding: 12px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px; }
+        .btn-primary { background: var(--primary); color: #fff; width: 100%; }
+        .btn-primary:hover { background: #b71c1c; }
+        .btn-logout { background: #555; color: #fff; padding: 6px 15px; }
+
+        .hidden { display: none !important; }
+        .user-badge { background: #e8f5e9; color: #2e7d32; padding: 10px 15px; border-radius: 5px; margin-bottom: 20px; font-weight: bold; border-left: 4px solid #2e7d32; }
+        .media-section { background: #fdf2f2; padding: 15px; border-radius: 6px; border: 1px dashed var(--primary); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 LOGIN OVERLAY -->
+    <div id="loginOverlay" class="login-overlay">
+        <div class="login-box">
+            <h2>👤 Reporter Login</h2>
+            <div class="form-group">
+                <label>Reporter User ID</label>
+                <input type="text" id="subUserVal" placeholder="Apni User ID daalein">
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" id="subPassVal" placeholder="Password">
+            </div>
+            <button class="btn btn-primary" onclick="verifySubLogin()">Login Karein</button>
+        </div>
+    </div>
+
+    <!-- MAIN REPORTER DASHBOARD -->
+    <div id="mainReporterDashboard" class="hidden">
+        <div class="header">
+            <h1>Uttarakhand Vision - Reporter Portal</h1>
+            <button class="btn btn-logout" onclick="logoutSub()">Logout</button>
+        </div>
+
+        <div class="container">
+            <div class="card">
+                <div class="user-badge" id="loggedInReporterName">Logged in as Reporter</div>
+                <div class="card-header">📰 Nayi Khabar Send Karein (Submit News Article)</div>
+
+                <form id="newsForm" onsubmit="submitNews(event)">
+                    <div class="form-group">
+                        <label>खबर का शीर्षक (Title)</label>
+                        <input type="text" id="newsTitle" placeholder="खबर का मुख्य शीर्षक (Hindi me type karein)" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>खबर का पूरा विवरण (Content)</label>
+                        <textarea id="newsContent" placeholder="पूरी खबर का विवरण यहाँ लिखें..." required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>कैटेगरी (Category)</label>
+                        <select id="newsCategory" required>
+                            <option value="राज्य">राज्य (State News)</option>
+                            <option value="राजनीति">राजनीति (Politics)</option>
+                            <option value="अपराध">अपराध (Crime)</option>
+                            <option value="खेल">खेल (Sports)</option>
+                            <option value="व्यापार">व्यापार (Business)</option>
+                            <option value="मनोरंजन">मनोरंजन (Entertainment)</option>
+                            <option value="मौसम">मौसम (Weather)</option>
+                        </select>
+                    </div>
+
+                    <!-- MANDAL DROPDOWN -->
+                    <div class="form-group">
+                        <label>मंडल (Mandal)</label>
+                        <select id="newsMandal" onchange="updateDistrictDropdown()" required>
+                            <option value="कुमाऊं">कुमाऊं (Kumaon)</option>
+                            <option value="गढ़वाल">गढ़वाल (Garhwal)</option>
+                        </select>
+                    </div>
+
+                    <!-- DISTRICT DROPDOWN -->
+                    <div class="form-group">
+                        <label>जिला चुनें (Select District)</label>
+                        <select id="newsDistrict" required></select>
+                    </div>
+
+                    <!-- MEDIA ATTACHMENTS (OPTIONAL) -->
+                    <div class="media-section">
+                        <h4 style="margin-top:0; color:var(--primary);">📷 🎥 Media Attachments (Optional)</h4>
+
+                        <div class="form-group">
+                            <label>1. फोटो अपलोड करें (Image File)</label>
+                            <input type="file" id="newsImage" accept="image/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label>2. वीडियो फाइल अपलोड करें (Video File - MP4)</label>
+                            <input type="file" id="newsVideoFile" accept="video/*">
+                        </div>
+
+                        <div class="form-group">
+                            <label>3. यूट्यूब वीडियो लिंक (YouTube Video URL)</label>
+                            <input type="url" id="newsYoutubeUrl" placeholder="https://www.youtube.com/watch?v=XXXXX">
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary">Super Admin Ko Approval Ke Liye Bhejein</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWxB-KOkWNn2Z4sRUtLQuTxy-ZUCNxK1s",
+            authDomain: "uttarakhand-vision.firebaseapp.com",
+            databaseURL: "https://uttarakhand-vision-default-rtdb.firebaseio.com",
+            projectId: "uttarakhand-vision",
+            storageBucket: "uttarakhand-vision.firebasestorage.app",
+            messagingSenderId: "72349034061",
+            appId: "1:72349034061:web:2a9cfce56aaf04d5ef1e04",
+            measurementId: "G-X5F72XCJ2T"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let currentReporter = null;
+
+        const districtsData = {
+            "कुमाऊं": ["नैनीताल", "अल्मोड़ा", "पिथौरागढ़", "ऊधमसिंह नगर", "बागेश्वर", "चम्पावत"],
+            "गढ़वाल": ["देहरादून", "हरिद्वार", "पौड़ी गढ़वाल", "टिहरी गढ़वाल", "उत्तरकाशी", "चमोली", "रुद्रप्रयाग"]
+        };
+
+        window.onload = function() {
+            const savedRep = sessionStorage.getItem('active_reporter');
+            if(savedRep) {
+                currentReporter = JSON.parse(savedRep);
+                showReporterDashboard();
+            }
+        };
+
+        function verifySubLogin() {
+            const u = document.getElementById('subUserVal').value.trim();
+            const p = document.getElementById('subPassVal').value.trim();
+
+            if(!u || !p) return alert('Username aur Password dono daalein!');
+
+            db.ref('subadmins').once('value').then(snap => {
+                const data = snap.val() || {};
+                let found = null;
+
+                for(let key in data) {
+                    if(data[key].username === u && data[key].password === p) {
+                        found = data[key];
+                        break;
+                    }
+                }
+
+                if(found) {
+                    currentReporter = found;
+                    sessionStorage.setItem('active_reporter', JSON.stringify(found));
+                    showReporterDashboard();
+                } else {
+                    alert('Galat User ID ya Password!');
+                }
+            });
+        }
+
+        function showReporterDashboard() {
+            document.getElementById('loginOverlay').classList.add('hidden');
+            document.getElementById('mainReporterDashboard').classList.remove('hidden');
+            document.getElementById('loggedInReporterName').innerText = `Logged in as Reporter: ${currentReporter.name} (${currentReporter.district || 'Uttarakhand'})`;
+            updateDistrictDropdown();
+        }
+
+        function logoutSub() {
+            sessionStorage.removeItem('active_reporter');
+            location.reload();
+        }
+
+        function updateDistrictDropdown() {
+            const selectedMandal = document.getElementById('newsMandal').value;
+            const districtSelect = document.getElementById('newsDistrict');
+            districtSelect.innerHTML = '';
+
+            const districtsList = districtsData[selectedMandal] || [];
+            districtsList.forEach(dist => {
+                const opt = document.createElement('option');
+                opt.value = dist;
+                opt.innerText = dist;
+                districtSelect.appendChild(opt);
+            });
+        }
+
+        function submitNews(e) {
+            e.preventDefault();
+
+            const title = document.getElementById('newsTitle').value.trim();
+            const content = document.getElementById('newsContent').value.trim();
+            const category = document.getElementById('newsCategory').value;
+            const mandal = document.getElementById('newsMandal').value;
+            const district = document.getElementById('newsDistrict').value;
+            const ytUrl = document.getElementById('newsYoutubeUrl').value.trim();
+
+            const imgFile = document.getElementById('newsImage').files[0];
+            const videoFile = document.getElementById('newsVideoFile').files[0];
+
+            const readAsBase64 = (file) => {
+                return new Promise((resolve) => {
+                    if (!file) resolve('');
+                    const reader = new FileReader();
+                    reader.onload = evt => resolve(evt.target.result);
+                    reader.readAsDataURL(file);
+                });
+            };
+
+            Promise.all([readAsBase64(imgFile), readAsBase64(videoFile)]).then(([imgBase64, videoBase64]) => {
+                const newRef = db.ref('pendingNews').push();
+                const newsData = {
+                    id: newRef.key,
+                    title: title,
+                    content: content,
+                    category: category,
+                    mandal: mandal,
+                    district: district,
+                    image: imgBase64 || '',
+                    video: videoBase64 || '',
+                    youtubeUrl: ytUrl || '',
+                    reporterName: currentReporter.name,
+                    reporterId: currentReporter.username,
+                    timestamp: Date.now()
+                };
+
+                newRef.set(newsData).then(() => {
+                    alert('Khabar (Media ke saath) Super Admin ko bheji gayi hai!');
+                    document.getElementById('newsForm').reset();
+                    updateDistrictDropdown();
+                });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Admin Control Center - Uttarakhand Vision</title>
+    
+    <!-- Firebase Libraries -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --primary: #d32f2f;
+            --dark: #111;
+            --light: #f4f6f9;
+            --success: #2e7d32;
+            --blue: #0288d1;
+            --warning: #f57c00;
+        }
+        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 0; }
+        
+        /* Security Login Screen */
+        .login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        .login-box { background: #fff; padding: 30px; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
+        .login-box h2 { color: var(--primary); margin-top: 0; text-align: center; }
+
+        /* Navigation Bar */
+        .admin-header { background: var(--dark); color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+        .admin-header h1 { margin: 0; font-size: 22px; color: var(--primary); }
+        .admin-nav { background: #222; display: flex; overflow-x: auto; }
+        .admin-nav button { background: none; border: none; color: #fff; padding: 14px 20px; font-weight: bold; cursor: pointer; border-bottom: 3px solid transparent; transition: 0.3s; white-space: nowrap; }
+        .admin-nav button.active, .admin-nav button:hover { background: #333; border-bottom-color: var(--primary); color: #fff; }
+
+        /* Layout Container */
+        .container { max-width: 1100px; margin: 25px auto; padding: 0 20px; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        
+        .card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-bottom: 25px; }
+        .card-header { border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 20px; color: var(--primary); font-size: 20px; font-weight: bold; }
+        
+        /* Form Controls */
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; color: #444; }
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
+        textarea { height: 100px; resize: vertical; }
+        
+        /* Buttons & Cards */
+        .btn { padding: 10px 18px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 14px; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: #b71c1c; }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-blue { background: var(--blue); color: #fff; }
+        .btn-danger { background: #c62828; color: #fff; }
+        .btn-logout { background: #666; color: #fff; padding: 6px 15px; float: right; }
+        
+        /* Analytics Grid */
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: #fff; padding: 20px; border-radius: 8px; border-left: 5px solid var(--primary); box-shadow: 0 2px 8px rgba(0,0,0,0.06); text-align: center; }
+        .stat-card h3 { margin: 0; font-size: 30px; color: #222; }
+        .stat-card p { margin: 5px 0 0 0; color: #666; font-weight: bold; font-size: 13px; text-transform: uppercase; }
+
+        /* Data Items */
+        .data-item { border: 1px solid #e0e0e0; padding: 15px; border-radius: 6px; margin-bottom: 15px; background: #fafafa; }
+        .data-item h3 { margin: 0 0 8px 0; color: #222; }
+        .meta-info { font-size: 13px; color: #666; margin-bottom: 10px; }
+        .action-btns { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+        .edit-box { background: #eef7fc; border: 1px dashed var(--blue); padding: 15px; border-radius: 6px; margin-top: 15px; display: none; }
+        
+        .media-preview-box { margin-top: 10px; padding: 10px; background: #eaeaea; border-radius: 6px; }
+        .media-preview-box img, .media-preview-box video { max-width: 100%; max-height: 250px; border-radius: 4px; display: block; margin-top: 5px; }
+        .media-preview-box iframe { max-width: 100%; border: none; border-radius: 4px; }
+
+        .hidden { display: none !important; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        table, th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        th { background: #f0f0f0; }
+    </style>
+</head>
+<body>
+
+    <!-- 🔒 0. LOGIN OVERLAY -->
+    <div id="superLoginOverlay" class="login-overlay">
+        <div class="login-box">
+            <h2>🔑 Super Admin Access</h2>
+            <div class="form-group">
+                <label>Admin ID</label>
+                <input type="text" id="adminUserVal" placeholder="Super Admin ID">
+            </div>
+            <div class="form-group">
+                <label>Admin Password</label>
+                <input type="password" id="adminPassVal" placeholder="Password">
+            </div>
+            <button class="btn btn-primary" style="width:100%;" onclick="verifyAdminLogin()">Login Dashboard</button>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <div id="mainDashboard" class="hidden">
+        
+        <!-- Header Bar -->
+        <div class="admin-header">
+            <h1>🛠️ Uttarakhand Vision - Super Admin Console</h1>
+            <button class="btn btn-logout" onclick="logoutAdmin()">Logout</button>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="admin-nav">
+            <button class="active" onclick="openTab('analyticsTab', this)">📊 Analytics & Reports</button>
+            <button onclick="openTab('pendingTab', this)">📥 Pending News (<span id="pendingCount">0</span>)</button>
+            <button onclick="openTab('liveNewsTab', this)">🌐 Live Articles (Edit/Delete)</button>
+            <button onclick="openTab('breakingTab', this)">🔴 Breaking News Manager</button>
+            <button onclick="openTab('subadminTab', this)">👥 Sub-Admin Accounts</button>
+            <button onclick="openTab('adsTab', this)">📢 Ads & Vigyanpan</button>
+            <button onclick="openTab('brandingTab', this)">⚙️ Logo, Banner & Links</button>
+        </div>
+
+        <div class="container">
+
+            <!-- 1. ANALYTICS & REPORTS TAB -->
+            <div id="analyticsTab" class="tab-content active">
+                <div class="card">
+                    <div class="card-header">📊 Overall Portal Analytics</div>
+                    
+                    <div class="stats-grid">
+                        <div class="stat-card" style="border-left-color: var(--blue);">
+                            <h3 id="statTotalPublished">0</h3>
+                            <p>Total Published</p>
+                        </div>
+                        <div class="stat-card" style="border-left-color: var(--warning);">
+                            <h3 id="statTotalPending">0</h3>
+                            <p>Pending Approval</p>
+                        </div>
+                        <div class="stat-card" style="border-left-color: var(--primary);">
+                            <h3 id="statTotalRejected">0</h3>
+                            <p>Total Rejected</p>
+                        </div>
+                    </div>
+
+                    <!-- Date Range Filter -->
+                    <div style="background: #eef2f5; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <h4 style="margin-top:0;">📅 Date Range Filter</h4>
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label>Start Date</label>
+                                <input type="date" id="startDateFilter">
+                            </div>
+                            <div class="form-group">
+                                <label>End Date</label>
+                                <input type="date" id="endDateFilter">
+                            </div>
+                        </div>
+                        <button class="btn btn-blue" onclick="filterAnalyticsByDate()">Apply Filter</button>
+                        <button class="btn" style="background:#777; color:#fff;" onclick="resetAnalyticsFilter()">Reset Filter</button>
+                    </div>
+
+                    <!-- Reporter Performance Table -->
+                    <h4>👥 Reporter-wise Performance Summary</h4>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Reporter Name</th>
+                                <th>Published News</th>
+                                <th>Pending News</th>
+                                <th>Rejected News</th>
+                            </tr>
+                        </thead>
+                        <tbody id="reporterStatsBody">
+                            <tr><td colspan="4">Loading performance...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 2. PENDING NEWS TAB -->
+            <div id="pendingTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">📥 Sub-Admins Se Aayi Nayi Khabrein</div>
+                    <div id="pendingList">Prakriya me hai...</div>
+                </div>
+            </div>
+
+            <!-- 3. LIVE NEWS EDIT / DELETE TAB -->
+            <div id="liveNewsTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">🌐 Live Published News Management</div>
+                    <div id="approvedList">Loading live news...</div>
+                </div>
+            </div>
+
+            <!-- 4. BREAKING NEWS MANAGER TAB -->
+            <div id="breakingTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">🔴 Live Breaking News Ticker Manager</div>
+                    <div class="form-group">
+                        <label>Nayi Breaking Khabar (Headline)</label>
+                        <input type="text" id="breakingInput" placeholder="Jaise: Uttarakhand me mausam ka yellow alert jaari...">
+                    </div>
+                    <button class="btn btn-primary" onclick="addBreakingNews()">Ticker Me Add Karein</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">📋 Filhal Chal Rahi Breaking Khabrein</div>
+                    <div id="breakingList">Loading breaking headlines...</div>
+                </div>
+            </div>
+
+            <!-- 5. SUB-ADMIN USER MANAGEMENT TAB -->
+            <div id="subadminTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">➕ Naya Sub-Admin / Reporter Create Karein</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Reporter Ka Naam</label>
+                            <input type="text" id="newSubName" placeholder="Jaise: Rahul Sharma">
+                        </div>
+                        <div class="form-group">
+                            <label>Username / User ID</label>
+                            <input type="text" id="newSubUser" placeholder="Jaise: rahul123">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <input type="text" id="newSubPass" placeholder="Password Set Karein">
+                        </div>
+                        <div class="form-group">
+                            <label>Assigned District / Area</label>
+                            <input type="text" id="newSubDistrict" placeholder="Jaise: Dehradun">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="createSubAdmin()">Sub-Admin Account Banayein</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">👥 Pahele Se Maujood Sub-Admins</div>
+                    <div id="subadminList">Loading Sub-Admins...</div>
+                </div>
+            </div>
+
+            <!-- 6. ADVERTISEMENT MANAGEMENT TAB -->
+            <div id="adsTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">📢 Top Banner Advertisement (Sidebar Upper)</div>
+                    <div class="form-group">
+                        <label>Ad Banner Direct Upload (Mobile/Desktop File Chooser)</label>
+                        <input type="file" id="topAdFile" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Click Target Link (Website / WhatsApp)</label>
+                        <input type="url" id="topAdLink" placeholder="https://example.com">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAd('top')">Top Banner Ad Save Karein</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">📢 Middle Promotional Ad (Sidebar Lower)</div>
+                    <div class="form-group">
+                        <label>Ad Banner Direct Upload</label>
+                        <input type="file" id="midAdFile" accept="image/*">
+                    </div>
+                    <div class="form-group">
+                        <label>Click Target Link</label>
+                        <input type="url" id="midAdLink" placeholder="https://example.com">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveAd('middle')">Middle Ad Save Karein</button>
+                </div>
+            </div>
+
+            <!-- 7. LOGO, BANNER & BRANDING TAB -->
+            <div id="brandingTab" class="tab-content">
+                <div class="card">
+                    <div class="card-header">🖼️ Website Header Logo & Banner Upload</div>
+                    <div class="form-group">
+                        <label>Website Main Logo Upload</label>
+                        <input type="file" id="siteLogoFile" accept="image/*">
+                        <div id="currentLogoPreview" style="margin-top:5px;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Website Header Top Banner Image Upload</label>
+                        <input type="file" id="siteBannerFile" accept="image/*">
+                        <div id="currentBannerPreview" style="margin-top:5px;"></div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveMediaBranding()">Logo & Banner Save Karein</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">🏷️ Portal Tagline Setup</div>
+                    <div class="form-group">
+                        <label>Tagline</label>
+                        <input type="text" id="siteTagline" placeholder="Sach Sabse Pehle, Devbhoomi Ki Har Awaaz">
+                    </div>
+                    <button class="btn btn-primary" onclick="saveTagline()">Tagline Update Karein</button>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">🔗 Social Media Links Control</div>
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Facebook Page Link</label>
+                            <input type="url" id="fbUrl" placeholder="https://facebook.com/yourpage">
+                        </div>
+                        <div class="form-group">
+                            <label>YouTube Channel Link</label>
+                            <input type="url" id="ytUrl" placeholder="https://youtube.com/@yourchannel">
+                        </div>
+                        <div class="form-group">
+                            <label>WhatsApp Group / Channel Link</label>
+                            <input type="url" id="waUrl" placeholder="https://chat.whatsapp.com/...">
+                        </div>
+                        <div class="form-group">
+                            <label>Twitter (X) Link</label>
+                            <input type="url" id="twUrl" placeholder="https://x.com/yourprofile">
+                        </div>
+                        <div class="form-group">
+                            <label>Instagram Page Link</label>
+                            <input type="url" id="instaUrl" placeholder="https://instagram.com/yourprofile">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveSocialLinks()">Social Links Save Karein</button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyDWxB-KOkWNn2Z4sRUtLQuTxy-ZUCNxK1s",
+            authDomain: "uttarakhand-vision.firebaseapp.com",
+            databaseURL: "https://uttarakhand-vision-default-rtdb.firebaseio.com",
+            projectId: "uttarakhand-vision",
+            storageBucket: "uttarakhand-vision.firebasestorage.app",
+            messagingSenderId: "72349034061",
+            appId: "1:72349034061:web:2a9cfce56aaf04d5ef1e04",
+            measurementId: "G-X5F72XCJ2T"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let globalApproved = {};
+        let globalPending = {};
+        let globalRejected = {};
+
+        // Security Check On Page Load
+        window.onload = function() {
+            if(sessionStorage.getItem('superadmin_logged') === 'true') {
+                showAdminDashboard();
+            }
+        };
+
+        function verifyAdminLogin() {
+            const u = document.getElementById('adminUserVal').value.trim();
+            const p = document.getElementById('adminPassVal').value.trim();
+
+            if((u === 'admin' && p === 'admin123') || (u === 'superadmin' && p === 'super123')) {
+                sessionStorage.setItem('superadmin_logged', 'true');
+                showAdminDashboard();
+            } else {
+                alert('Galat Super Admin ID ya Password!');
+            }
+        }
+
+        function showAdminDashboard() {
+            document.getElementById('superLoginOverlay').classList.add('hidden');
+            document.getElementById('mainDashboard').classList.remove('hidden');
+            loadAllData();
+        }
+
+        function logoutAdmin() {
+            sessionStorage.removeItem('superadmin_logged');
+            location.reload();
+        }
+
+        function loadAllData() {
+            loadAnalyticsData();
+            loadPendingNews();
+            loadLiveNews();
+            loadBreakingNews();
+            loadSubAdmins();
+            loadSettings();
+        }
+
+        function openTab(tabId, btn) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.admin-nav button').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            btn.classList.add('active');
+        }
+
+        // 1. ANALYTICS & REPORTER REPORTING
+        function loadAnalyticsData() {
+            db.ref('approvedNews').on('value', snap => {
+                globalApproved = snap.val() || {};
+                db.ref('pendingNews').on('value', pSnap => {
+                    globalPending = pSnap.val() || {};
+                    db.ref('rejectedNews').on('value', rSnap => {
+                        globalRejected = rSnap.val() || {};
+                        renderAnalytics(globalApproved, globalPending, globalRejected);
+                    });
+                });
+            });
+        }
+
+        function renderAnalytics(approved, pending, rejected) {
+            const appKeys = Object.keys(approved);
+            const penKeys = Object.keys(pending);
+            const rejKeys = Object.keys(rejected);
+
+            document.getElementById('statTotalPublished').innerText = appKeys.length;
+            document.getElementById('statTotalPending').innerText = penKeys.length;
+            document.getElementById('statTotalRejected').innerText = rejKeys.length;
+
+            const reporterStats = {};
+
+            const processItem = (item, type) => {
+                const name = item.reporterName || 'Admin / Unknown';
+                if(!reporterStats[name]) reporterStats[name] = { pub: 0, pen: 0, rej: 0 };
+                if(type === 'pub') reporterStats[name].pub++;
+                if(type === 'pen') reporterStats[name].pen++;
+                if(type === 'rej') reporterStats[name].rej++;
+            };
+
+            appKeys.forEach(k => processItem(approved[k], 'pub'));
+            penKeys.forEach(k => processItem(pending[k], 'pen'));
+            rejKeys.forEach(k => processItem(rejected[k], 'rej'));
+
+            const tbody = document.getElementById('reporterStatsBody');
+            tbody.innerHTML = '';
+            
+            if(Object.keys(reporterStats).length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4">Koi data uplabdh nahi hai</td></tr>';
+                return;
+            }
+
+            for(let rName in reporterStats) {
+                tbody.innerHTML += `
+                    <tr>
+                        <td><b>${rName}</b></td>
+                        <td style="color:green; font-weight:bold;">${reporterStats[rName].pub}</td>
+                        <td style="color:orange; font-weight:bold;">${reporterStats[rName].pen}</td>
+                        <td style="color:red; font-weight:bold;">${reporterStats[rName].rej}</td>
+                    </tr>
+                `;
+            }
+        }
+
+        function filterAnalyticsByDate() {
+            const start = document.getElementById('startDateFilter').value;
+            const end = document.getElementById('endDateFilter').value;
+
+            if(!start || !end) {
+                alert('Kripya Start Date aur End Date dono chunein!');
+                return;
+            }
+
+            const startTime = new Date(start).getTime();
+            const endTime = new Date(end).getTime() + (24 * 60 * 60 * 1000);
+
+            const filterMap = (obj) => {
+                const res = {};
+                for(let k in obj) {
+                    const ts = obj[k].timestamp || 0;
+                    if(ts >= startTime && ts <= endTime) {
+                        res[k] = obj[k];
+                    }
+                }
+                return res;
+            };
+
+            renderAnalytics(filterMap(globalApproved), filterMap(globalPending), filterMap(globalRejected));
+        }
+
+        function resetAnalyticsFilter() {
+            document.getElementById('startDateFilter').value = '';
+            document.getElementById('endDateFilter').value = '';
+            renderAnalytics(globalApproved, globalPending, globalRejected);
+        }
+
+        // Helper to convert YouTube URL to Embed ID (FIXED FOR ALL YOUTUBE URL FORMATS)
+        function getYouTubeEmbedUrl(url) {
+            if(!url) return null;
+            let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
+            let match = url.match(regExp);
+            return (match && match[2].length === 11) ? `https://www.youtube.com/embed/${match[2]}` : null;
+        }
+
+        // 2. PENDING NEWS MANAGEMENT
+        function loadPendingNews() {
+            db.ref('pendingNews').on('value', snap => {
+                const data = snap.val() || {};
+                const container = document.getElementById('pendingList');
+                const countBadge = document.getElementById('pendingCount');
+                container.innerHTML = '';
+
+                const keys = Object.keys(data);
+                countBadge.innerText = keys.length;
+
+                if(keys.length === 0) {
+                    container.innerHTML = '<p>Koi bhi pending news approval ke liye nahi hai.</p>';
+                    return;
+                }
+
+                keys.forEach(key => {
+                    let item = data[key];
+                    
+                    // Media Preview Logic
+                    let mediaHtml = '';
+                    if (item.videoUrl) {
+                        mediaHtml = `<div class="media-preview-box">📹 <b>Uploaded Video:</b><video controls src="${item.videoUrl}"></video></div>`;
+                    } else if (item.youtubeUrl) {
+                        let embed = getYouTubeEmbedUrl(item.youtubeUrl);
+                        if(embed) {
+                            mediaHtml = `<div class="media-preview-box">▶️ <b>YouTube Video:</b><br><iframe width="100%" height="220" src="${embed}" frameborder="0" allowfullscreen></iframe></div>`;
+                        } else {
+                            mediaHtml = `<div class="media-preview-box">▶️ <b>YouTube Link:</b> <a href="${item.youtubeUrl}" target="_blank">${item.youtubeUrl}</a></div>`;
+                        }
+                    } else if (item.image) {
+                        mediaHtml = `<div class="media-preview-box">🖼️ <b>Photo:</b><br><img src="${item.image}"></div>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="data-item">
+                            <h3>${item.title}</h3>
+                            <div class="meta-info">👤 <b>Reporter:</b> ${item.reporterName || 'Sub-Admin'} | 📌 <b>Category:</b> ${item.category} | 📍 <b>Zila:</b> ${item.district || 'Uttarakhand'}</div>
+                            <p>${item.content}</p>
+                            ${mediaHtml}
+                            <div class="action-btns">
+                                <button class="btn btn-success" onclick="approveAndPublish('${key}', false)">Approve Standard</button>
+                                <button class="btn btn-primary" onclick="approveAndPublish('${key}', true)">Approve Slider Story</button>
+                                <button class="btn btn-danger" onclick="rejectPendingNews('${key}')">Reject News</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function approveAndPublish(key, isSlider) {
+            db.ref('pendingNews/' + key).once('value', snap => {
+                const item = snap.val();
+                if(item) {
+                    item.placements = { slider: isSlider, district: item.category === 'District', breaking: false };
+                    db.ref('approvedNews/' + key).set(item).then(() => {
+                        db.ref('pendingNews/' + key).remove();
+                        alert('News Live Website par publish ho gayi hai!');
+                    });
+                }
+            });
+        }
+
+        function rejectPendingNews(key) {
+            if(confirm('Kya aap is news ko reject karna chahte hain?')) {
+                db.ref('pendingNews/' + key).once('value', snap => {
+                    const item = snap.val();
+                    if(item) {
+                        db.ref('rejectedNews/' + key).set(item).then(() => {
+                            db.ref('pendingNews/' + key).remove();
+                            alert('News reject kar di gayi.');
+                        });
+                    }
+                });
+            }
+        }
+
+        // 3. LIVE NEWS EDIT & DELETE
+        function loadLiveNews() {
+            db.ref('approvedNews').on('value', snap => {
+                const data = snap.val() || {};
+                const container = document.getElementById('approvedList');
+                container.innerHTML = '';
+
+                const keys = Object.keys(data);
+                if(keys.length === 0) {
+                    container.innerHTML = '<p>Abhi live website par koi news published nahi hai.</p>';
+                    return;
+                }
+
+                keys.forEach(key => {
+                    let item = data[key];
+                    let mediaHtml = '';
+                    if (item.videoUrl) {
+                        mediaHtml = `<div class="media-preview-box">📹 <video controls src="${item.videoUrl}"></video></div>`;
+                    } else if (item.youtubeUrl) {
+                        let embed = getYouTubeEmbedUrl(item.youtubeUrl);
+                        if(embed) {
+                            mediaHtml = `<div class="media-preview-box"><iframe width="100%" height="220" src="${embed}" frameborder="0" allowfullscreen></iframe></div>`;
+                        }
+                    } else if (item.image) {
+                        mediaHtml = `<div class="media-preview-box"><img src="${item.image}"></div>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="data-item" id="item_${key}">
+                            <h3>${item.title}</h3>
+                            <div class="meta-info">👤 <b>Reporter:</b> ${item.reporterName || 'Admin'} | 📌 <b>Category:</b> ${item.category}</div>
+                            <p>${item.content}</p>
+                            ${mediaHtml}
+                            <div class="action-btns">
+                                <button class="btn btn-blue" onclick="toggleEdit('${key}')">✏️ Edit News</button>
+                                <button class="btn btn-danger" onclick="deleteLiveNews('${key}')">🗑️ Delete Live</button>
+                            </div>
+                            
+                            <div class="edit-box" id="editBox_${key}">
+                                <h4>✏️ News Edit Karein</h4>
+                                <div class="form-group">
+                                    <label>Title</label>
+                                    <input type="text" id="editTitle_${key}" value="${item.title}">
+                                </div>
+                                <div class="form-group">
+                                    <label>Content</label>
+                                    <textarea id="editContent_${key}">${item.content}</textarea>
+                                </div>
+                                <div class="form-group">
+                                    <label>YouTube Video Link</label>
+                                    <input type="text" id="editYt_${key}" value="${item.youtubeUrl || ''}">
+                                </div>
+                                <div class="action-btns">
+                                    <button class="btn btn-success" onclick="saveLiveEdit('${key}')">Save Changes</button>
+                                    <button class="btn" style="background:#888; color:#fff;" onclick="toggleEdit('${key}')">Cancel</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function toggleEdit(key) {
+            const box = document.getElementById(`editBox_${key}`);
+            box.style.display = (box.style.display === 'block') ? 'none' : 'block';
+        }
+
+        function saveLiveEdit(key) {
+            const updatedTitle = document.getElementById(`editTitle_${key}`).value.trim();
+            const updatedContent = document.getElementById(`editContent_${key}`).value.trim();
+            const updatedYt = document.getElementById(`editYt_${key}`).value.trim();
+
+            if(!updatedTitle || !updatedContent) return alert('Title aur Content bharein!');
+
+            db.ref(`approvedNews/${key}`).update({
+                title: updatedTitle,
+                content: updatedContent,
+                youtubeUrl: updatedYt
+            }).then(() => {
+                alert('Live news update ho gayi!');
+            });
+        }
+
+        function deleteLiveNews(key) {
+            if(confirm('Kya aap ise Live Portal se delete karna chahte hain?')) {
+                db.ref('approvedNews/' + key).remove();
+            }
+        }
+
+        // 4. BREAKING NEWS TICKER
+        function addBreakingNews() {
+            const text = document.getElementById('breakingInput').value.trim();
+            if(!text) return alert('Text likhein!');
+
+            const newRef = db.ref('breakingNews').push();
+            newRef.set({ text: text }).then(() => {
+                document.getElementById('breakingInput').value = '';
+                alert('Breaking News add kar di gayi!');
+            });
+        }
+
+        function loadBreakingNews() {
+            db.ref('breakingNews').on('value', snap => {
+                const data = snap.val() || {};
+                const container = document.getElementById('breakingList');
+                container.innerHTML = '';
+
+                for(let key in data) {
+                    container.innerHTML += `
+                        <div class="data-item" style="display:flex; justify-content:space-between; align-items:center;">
+                            <span>🔴 <b>${data[key].text}</b></span>
+                            <button class="btn btn-danger" onclick="deleteBreaking('${key}')">Remove</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function deleteBreaking(key) {
+            db.ref('breakingNews/' + key).remove();
+        }
+
+        // 5. SUB-ADMIN MANAGEMENT
+        function createSubAdmin() {
+            const name = document.getElementById('newSubName').value.trim();
+            const username = document.getElementById('newSubUser').value.trim();
+            const password = document.getElementById('newSubPass').value.trim();
+            const district = document.getElementById('newSubDistrict').value.trim();
+
+            if(!name || !username || !password) return alert('Kripya sabhi fields bharein!');
+
+            db.ref('subAdmins/' + username).set({
+                name: name,
+                username: username,
+                password: password,
+                district: district
+            }).then(() => {
+                alert('Sub-Admin account kamyabi se ban gaya!');
+                document.getElementById('newSubName').value = '';
+                document.getElementById('newSubUser').value = '';
+                document.getElementById('newSubPass').value = '';
+                document.getElementById('newSubDistrict').value = '';
+            });
+        }
+
+        function loadSubAdmins() {
+            db.ref('subAdmins').on('value', snap => {
+                const data = snap.val() || {};
+                const container = document.getElementById('subadminList');
+                container.innerHTML = '';
+
+                for(let key in data) {
+                    let sub = data[key];
+                    container.innerHTML += `
+                        <div class="data-item" style="display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <b>👤 ${sub.name}</b> (ID: ${sub.username})<br>
+                                🔑 Password: ${sub.password} | 📍 Area: ${sub.district || 'All'}
+                            </div>
+                            <button class="btn btn-danger" onclick="deleteSubAdmin('${key}')">Delete Account</button>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        function deleteSubAdmin(key) {
+            if(confirm('Kya aap is Sub-Admin ko hatana chahte hain?')) {
+                db.ref('subAdmins/' + key).remove();
+            }
+        }
+
+        // 6. ADVERTISEMENT MANAGEMENT
+        function saveAd(type) {
+            const fileInput = document.getElementById(type === 'top' ? 'topAdFile' : 'midAdFile');
+            const linkInput = document.getElementById(type === 'top' ? 'topAdLink' : 'midAdLink').value.trim();
+            const file = fileInput.files[0];
+
+            if(file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    db.ref('ads/' + type).set({
+                        image: e.target.result,
+                        link: linkInput
+                    }).then(() => alert('Ad Save Ho Gaya!'));
+                };
+                reader.readAsDataURL(file);
+            } else if(linkInput) {
+                db.ref('ads/' + type).update({ link: linkInput }).then(() => alert('Ad Link Update Ho Gaya!'));
+            } else {
+                alert('File select karein ya link bharein!');
+            }
+        }
+
+        // 7. BRANDING & SOCIAL MEDIA LINKS CONTROL (FIXED SOCIAL MEDIA INTEGRATION)
+        function saveMediaBranding() {
+            const logoFile = document.getElementById('siteLogoFile').files[0];
+            const bannerFile = document.getElementById('siteBannerFile').files[0];
+
+            if(logoFile) {
+                const r1 = new FileReader();
+                r1.onload = (e) => db.ref('settings/logo').set(e.target.result);
+                r1.readAsDataURL(logoFile);
+            }
+            if(bannerFile) {
+                const r2 = new FileReader();
+                r2.onload = (e) => db.ref('settings/banner').set(e.target.result);
+                r2.readAsDataURL(bannerFile);
+            }
+            alert('Branding media updates request send ho gayi!');
+        }
+
+        function saveTagline() {
+            const tag = document.getElementById('siteTagline').value.trim();
+            db.ref('settings/tagline').set(tag).then(() => alert('Tagline Save Ho Gayi!'));
+        }
+
+        function saveSocialLinks() {
+            const fb = document.getElementById('fbUrl').value.trim();
+            const yt = document.getElementById('ytUrl').value.trim();
+            const wa = document.getElementById('waUrl').value.trim();
+            const tw = document.getElementById('twUrl').value.trim();
+            const insta = document.getElementById('instaUrl').value.trim();
+
+            db.ref('settings/socialLinks').set({
+                facebook: fb,
+                youtube: yt,
+                whatsapp: wa,
+                twitter: tw,
+                instagram: insta
+            }).then(() => {
+                alert('Social Media Links Kamyabi Se Save Ho Gaye!');
+            });
+        }
+
+        function loadSettings() {
+            db.ref('settings').on('value', snap => {
+                const s = snap.val() || {};
+                if(s.tagline) document.getElementById('siteTagline').value = s.tagline;
+                if(s.socialLinks) {
+                    document.getElementById('fbUrl').value = s.socialLinks.facebook || '';
+                    document.getElementById('ytUrl').value = s.socialLinks.youtube || '';
+                    document.getElementById('waUrl').value = s.socialLinks.whatsapp || '';
+                    document.getElementById('twUrl').value = s.socialLinks.twitter || '';
+                    document.getElementById('instaUrl').value = s.socialLinks.instagram || '';
+                }
+                if(s.logo) {
+                    document.getElementById('currentLogoPreview').innerHTML = `<img src="${s.logo}" height="40">`;
+                }
+                if(s.banner) {
+                    document.getElementById('currentBannerPreview').innerHTML = `<img src="${s.banner}" height="60">`;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
