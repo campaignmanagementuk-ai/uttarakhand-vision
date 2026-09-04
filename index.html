@@ -19,229 +19,411 @@
             --light: #f4f6f9;
             --border: #e0e0e0;
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 0; color: #333; }
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: var(--light);
+            margin: 0;
+            padding: 0;
+            color: #333;
+        }
         
         /* Top Bar & Header */
-        .top-bar { background: var(--dark); color: #fff; padding: 6px 20px; font-size: 13px; display: flex; justify-content: space-between; align-items: center; }
-        .main-header { background: #fff; padding: 15px 20px; border-bottom: 2px solid var(--primary); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .logo-area img { max-height: 60px; }
-        .header-banner img { max-height: 65px; border-radius: 4px; }
-        .tagline { font-size: 13px; color: #666; font-style: italic; margin-top: 4px; }
-
-        /* Breaking Ticker */
-        .breaking-box { background: #b71c1c; color: #fff; display: flex; align-items: center; overflow: hidden; height: 38px; }
-        .breaking-title { background: #000; padding: 0 15px; font-weight: bold; height: 100%; display: flex; align-items: center; white-space: nowrap; font-size: 14px; }
-        .ticker-text { white-space: nowrap; animation: ticker 22s linear infinite; padding-left: 100%; font-size: 14px; }
-        @keyframes ticker { 0% { transform: translate3d(0, 0, 0); } 100% { transform: translate3d(-100%, 0, 0); } }
-
-        /* Navigation Bar */
-        .nav-bar { background: #222; display: flex; overflow-x: auto; white-space: nowrap; }
-        .nav-bar a { color: #fff; text-decoration: none; padding: 12px 18px; font-size: 14px; font-weight: 500; transition: 0.3s; }
-        .nav-bar a:hover, .nav-bar a.active { background: var(--primary); }
-
-        /* Main Container */
-        .container { max-width: 1200px; margin: 20px auto; padding: 0 15px; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        @media(max-width: 768px) { .container { grid-template-columns: 1fr; } }
-
-        /* Cards & Components */
-        .section-header { border-bottom: 2px solid var(--primary); padding-bottom: 6px; margin-bottom: 15px; color: var(--primary); font-size: 18px; font-weight: bold; text-transform: uppercase; }
-        .card { background: #fff; border-radius: 6px; padding: 15px; margin-bottom: 20px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
-        
-        /* Media Display */
-        .news-media { width: 100%; max-height: 380px; object-fit: cover; border-radius: 5px; margin-bottom: 12px; }
-        .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; margin-bottom: 12px; border-radius: 5px; background: #000; }
-        .video-container iframe, .video-container video { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0; }
-
-        /* News Item Grid */
-        .news-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        @media(max-width: 500px) { .news-grid { grid-template-columns: 1fr; } }
-        
-        .news-item { border: 1px solid var(--border); border-radius: 5px; padding: 10px; background: #fff; }
-        .news-item h4 { margin: 8px 0; font-size: 15px; color: #111; line-height: 1.3; }
-        .meta { font-size: 11px; color: #777; margin-bottom: 6px; }
-
-        /* Hindi E-Newspaper Styling */
-        .epaper-wrapper {
-            background: #fffdfa; /* Newsprint background */
-            border: 3px double #222;
-            padding: 20px;
+        .top-bar {
+            background: var(--dark);
+            color: #fff;
+            padding: 6px 20px;
+            font-size: 13px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .main-header {
+            background: #fff;
+            padding: 15px 20px;
+            border-bottom: 2px solid var(--primary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .logo-area img {
+            max-height: 60px;
+        }
+        .header-banner img {
+            max-height: 65px;
             border-radius: 4px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
         }
-
-        .epaper-header {
-            text-align: center;
-            border-bottom: 3px double #111;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .epaper-brand {
-            font-size: 38px;
-            font-weight: 900;
-            color: #b71c1c;
-            letter-spacing: 1px;
-            margin: 0;
-            font-family: 'Georgia', serif;
-        }
-
-        .epaper-tagline {
-            font-size: 14px;
-            font-weight: 600;
-            color: #333;
+        .tagline {
+            font-size: 13px;
+            color: #666;
+            font-style: italic;
             margin-top: 4px;
         }
 
-        .epaper-meta-bar {
+        /* Breaking Ticker */
+        .breaking-box {
+            background: #b71c1c;
+            color: #fff;
             display: flex;
-            justify-content: space-between;
-            border-top: 2px solid #222;
-            border-bottom: 2px solid #222;
-            margin-top: 12px;
-            padding: 6px 12px;
-            font-size: 13px;
+            align-items: center;
+            overflow: hidden;
+            height: 38px;
+            position: relative;
+        }
+        .breaking-title {
+            background: #000;
+            padding: 0 15px;
             font-weight: bold;
-            background: #f2ebd9;
-            color: #111;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+            font-size: 14px;
+            z-index: 2;
+        }
+        .ticker-text-wrapper {
+            overflow: hidden;
+            white-space: nowrap;
+            width: 100%;
+        }
+        .ticker-text {
+            display: inline-block;
+            white-space: nowrap;
+            animation: ticker 25s linear infinite;
+            padding-left: 100%;
+            font-size: 14px;
+        }
+        .breaking-box:hover .ticker-text {
+            animation-play-state: paused;
+        }
+        @keyframes ticker {
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
         }
 
-        /* Sidebar Ads */
-        .ad-box { margin-bottom: 20px; text-align: center; }
-        .ad-box img { width: 100%; border-radius: 5px; }
+        /* Navigation Bar & Dropdown */
+        .nav-bar {
+            background: #222;
+            display: flex;
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+        .nav-bar::-webkit-scrollbar {
+            height: 4px;
+        }
+        .nav-bar::-webkit-scrollbar-thumb {
+            background: var(--primary);
+        }
+        .nav-bar a {
+            color: #fff;
+            text-decoration: none;
+            padding: 12px 18px;
+            font-size: 14px;
+            font-weight: 500;
+            transition: 0.3s;
+            display: inline-block;
+        }
+        .nav-bar a:hover, .nav-bar a.active {
+            background: var(--primary);
+        }
 
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #222;
+            min-width: 180px;
+            box-shadow: 0px 8px 16px rgba(0,0,0,0.3);
+            z-index: 999;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .dropdown-content a {
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            display: block;
+            font-size: 13px;
+            border-bottom: 1px solid #333;
+        }
+        .dropdown-content a:hover {
+            background: var(--primary);
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 0 15px;
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+        }
+        @media(max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+        }
+
+        /* Cards & Components */
+        .section-header {
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 6px;
+            margin-bottom: 15px;
+            color: var(--primary);
+            font-size: 18px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .card {
+            background: #fff;
+            border-radius: 6px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        
+        /* Media Display */
+        .news-media {
+            width: 100%;
+            max-height: 380px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-bottom: 12px;
+        }
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border-radius: 5px;
+            background: #000;
+        }
+        .video-container iframe, .video-container video {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+
+        /* News Item Grid */
+        .news-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        @media(max-width: 500px) {
+            .news-grid { grid-template-columns: 1fr; }
+        }
+        
+        .news-item {
+            border: 1px solid var(--border);
+            border-radius: 5px;
+            padding: 12px;
+            background: #fff;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: 0.2s;
+        }
+        .news-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        .news-item h4 {
+            margin: 8px 0;
+            font-size: 15px;
+            color: #111;
+            line-height: 1.3;
+        }
+        .meta {
+            font-size: 11px;
+            color: #777;
+            margin-bottom: 6px;
+        }
+
+        .read-more-btn {
+            background: #d32f2f;
+            color: #fff;
+            text-align: center;
+            text-decoration: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            font-size: 12px;
+            display: block;
+            margin-top: 10px;
+        }
+        .read-more-btn:hover {
+            background: #b71c1c;
+        }
+
+        /* Sidebar Widgets */
+        .sidebar-widget {
+            margin-bottom: 20px;
+        }
+        .poll-box label {
+            display: block;
+            font-size: 13px;
+            margin: 8px 0;
+            cursor: pointer;
+        }
+        
         /* Footer */
-        .footer { background: var(--dark); color: #fff; padding: 25px 15px; text-align: center; font-size: 13px; margin-top: 30px; }
-        .social-links a { color: #fff; text-decoration: none; margin: 0 8px; font-weight: bold; font-size: 14px; }
-        .social-links a:hover { color: var(--primary); }
-
-        /* 🖨️ Professional Newspaper Print Rules */
-        @media print {
-            body * {
-                visibility: hidden;
-            }
-            #epaperSection, #epaperSection * {
-                visibility: visible;
-            }
-            #epaperSection {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                margin: 0;
-                padding: 0;
-                box-shadow: none;
-                border: none;
-            }
-            .epaper-wrapper {
-                border: 2px solid #000;
-                background: #fff;
-            }
-            .no-print {
-                display: none !important;
-            }
+        .footer {
+            background: var(--dark);
+            color: #fff;
+            padding: 25px 15px;
+            text-align: center;
+            font-size: 13px;
+            margin-top: 30px;
+        }
+        .footer-links {
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .footer-links a {
+            color: #ff8a80;
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .footer-links a:hover {
+            text-decoration: underline;
+            color: #fff;
+        }
+        .social-links a {
+            color: #fff;
+            text-decoration: none;
+            margin: 0 8px;
+            font-weight: bold;
+            font-size: 14px;
+            display: inline-block;
         }
     </style>
 </head>
 <body>
 
-    <!-- Top Info Bar -->
+    <!-- Top Bar -->
     <div class="top-bar">
-        <span id="currentDate">Uttarakhand Vision Portal</span>
+        <span id="currentDate"><i class="fa-regular fa-calendar"></i> Uttarakhand Vision Portal</span>
         <div class="social-links" id="socialLinksHeader"></div>
     </div>
 
-    <!-- Header Section -->
+    <!-- Main Header -->
     <div class="main-header">
         <div class="logo-area">
-            <div id="siteLogo"><h2 style="color:var(--primary); margin:0;">Uttarakhand Vision</h2></div>
-            <div class="tagline" id="siteTagline">Sach Sabse Pehle, Devbhoomi Ki Har Awaaz</div>
+            <div id="siteLogo">
+                <h2 style="color:var(--primary); margin:0; font-size: 26px;">Uttarakhand Vision</h2>
+            </div>
+            <div class="tagline" id="siteTagline">सच सबसे पहले, देवभूमि की हर आवाज़</div>
         </div>
         <div class="header-banner" id="siteBanner"></div>
     </div>
 
     <!-- Breaking News Ticker -->
     <div class="breaking-box">
-        <div class="breaking-title">🔴 BREAKING</div>
-        <div class="ticker-text" id="breakingTicker">Khabrein load ho rahi hain...</div>
+        <div class="breaking-title">🔴 बड़ी खबर</div>
+        <div class="ticker-text-wrapper">
+            <div class="ticker-text" id="breakingTicker">उत्तराखंड विजन पोर्टल पर आपका स्वागत है। ताज़ा खबरें लोड हो रही हैं...</div>
+        </div>
     </div>
 
-    <!-- Main Navigation Bar -->
+    <!-- Navigation Bar -->
     <div class="nav-bar">
-        <a href="#" class="active" onclick="filterCategory('all', this)">गृह पृष्ठ (Home)</a>
-        <a href="#district" onclick="filterCategory('District', this)">राज्य / ज़िला समाचार</a>
-        <a href="#crime" onclick="filterCategory('Crime', this)">क्राइम</a>
-        <a href="#politics" onclick="filterCategory('Politics', this)">राजनीति</a>
-        <a href="#epaper" onclick="filterCategory('epaper', this)">📰 ई-समाचार पत्र (Weekly)</a>
+        <a href="index.html" class="active"><i class="fa-solid fa-house"></i> होम</a>
+        <div class="dropdown">
+            <a href="javascript:void(0);">राज्य / ज़िला समाचार <i class="fa-solid fa-angle-down"></i></a>
+            <div class="dropdown-content">
+                <a href="javascript:void(0);" onclick="filterCategory('Dehradun')">देहरादून</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Nainital')">नैनीताल / हल्द्वानी</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Haridwar')">हरिद्वार</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Udham Singh Nagar')">उधम सिंह नगर</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Almora')">अल्मोड़ा</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Pauri Garhwal')">पौड़ी गढ़वाल</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Tehri Garhwal')">टिहरी गढ़वाल</a>
+                <a href="javascript:void(0);" onclick="filterCategory('Pithoragarh')">पिथौरागढ़</a>
+            </div>
+        </div>
+        <a href="javascript:void(0);" onclick="filterCategory('Politics')">राजनीति</a>
+        <a href="javascript:void(0);" onclick="filterCategory('Crime')">क्राइम</a>
+        <a href="javascript:void(0);" onclick="filterCategory('Employment')">रोजगार & शिक्षा</a>
+        <a href="javascript:void(0);" onclick="filterCategory('Tourism')">पर्यटन & संस्कृति</a>
+        <a href="about.html">हमारे बारे में</a>
+        <a href="contact.html">संपर्क करें</a>
     </div>
 
-    <!-- Main Container Layout -->
+    <!-- Container Layout -->
     <div class="container">
-        
-        <!-- Left Column: News Content -->
+        <!-- Main News Feed Section -->
         <div class="main-content">
-            
-            <!-- Featured Slider / Main Headline -->
+            <!-- Featured Slider / Top News Card -->
             <div class="card" id="sliderSection">
-                <div class="section-header">🔥 Badi Khabar (Featured)</div>
-                <div id="mainSlider">Loading headline...</div>
+                <div class="section-header">🔥 मुख्य समाचार (Featured)</div>
+                <div id="mainSlider"><i class="fa-solid fa-spinner fa-spin"></i> प्रमुख खबर लोड हो रही है...</div>
             </div>
 
-            <!-- News Feeds Grid -->
+            <!-- Middle Ad Section -->
+            <div id="middleAd" style="margin-bottom: 20px; text-align: center;"></div>
+
+            <!-- Latest News Feed -->
             <div class="card">
-                <div class="section-header" id="feedTitle">📰 Taza Samachar</div>
-                <div class="news-grid" id="newsFeed">Loading news...</div>
+                <div class="section-header" id="feedTitle">📰 ताज़ा समाचार (Latest Feed)</div>
+                <div class="news-grid" id="newsFeed"><i class="fa-solid fa-spinner fa-spin"></i> ताज़ा खबरें लोड हो रही हैं...</div>
+            </div>
+        </div>
+
+        <!-- Sidebar Section -->
+        <div class="sidebar">
+            <div class="card sidebar-widget">
+                <div class="section-header">📌 महत्वपूर्ण लिंक्स</div>
+                <ul style="padding-left: 20px; font-size: 14px; line-height: 1.8; margin: 0;">
+                    <li><a href="about.html" style="color: #333; text-decoration: none;">हमारे बारे में जानें</a></li>
+                    <li><a href="contact.html" style="color: #333; text-decoration: none;">संपादक से संपर्क करें</a></li>
+                    <li><a href="disclaimer.html" style="color: #333; text-decoration: none;">अस्वीकरण (Disclaimer)</a></li>
+                    <li><a href="privacy.html" style="color: #333; text-decoration: none;">गोपनीयता नीति (Privacy Policy)</a></li>
+                </ul>
             </div>
 
-            <!-- E-Newspaper Section (Auto Weekly Edition) -->
-            <div class="card" id="epaperSection">
-                <div class="section-header">📰 ई-समाचार पत्र (साप्ताहिक संस्करण)</div>
-                
-                <div class="epaper-wrapper">
-                    <!-- Masthead -->
-                    <div class="epaper-header">
-                        <h1 class="epaper-brand">उत्तराखंड विज़न</h1>
-                        <div class="epaper-tagline">देवभूमि का निष्पक्ष एवं विश्वसनीय साप्ताहिक समाचार पत्र</div>
-                        <div class="epaper-meta-bar">
-                            <span>📍 स्थान: हल्द्वानी (उत्तराखंड)</span>
-                            <span id="epaperIssueDate">📅 अंक तिथि: लोड हो रहा है...</span>
-                            <span>🗞️ साप्ताहिक अंक | मूल्य: निःशुल्क</span>
-                        </div>
-                    </div>
-
-                    <!-- E-Paper Auto Generated Content -->
-                    <div class="epaper-body" id="epaperContent">
-                        <p style="text-align:center; padding: 20px;">साप्ताहिक ई-पेपर तैयार हो रहा है...</p>
-                    </div>
+            <div class="card sidebar-widget">
+                <div class="section-header">📊 जनमत पोल (Opinion Poll)</div>
+                <p style="font-size: 13px; font-weight: bold; margin-bottom: 8px;">क्या उत्तराखंड में सख्त भू-कानून लागू होना चाहिए?</p>
+                <div class="poll-box">
+                    <label><input type="radio" name="poll" value="yes"> हाँ, बिल्कुल</label>
+                    <label><input type="radio" name="poll" value="no"> नहीं</label>
+                    <button onclick="alert('धन्यवाद! आपका मत दर्ज कर लिया गया है।')" style="background:var(--primary); color:#fff; border:none; padding:6px 12px; border-radius:4px; font-size:12px; margin-top:8px; cursor:pointer;">वोट करें</button>
                 </div>
             </div>
-
         </div>
-
-        <!-- Right Column: Sidebar Ads & Additional Content -->
-        <div class="sidebar">
-            
-            <!-- Top Ad Banner -->
-            <div class="ad-box" id="topAd"></div>
-
-            <!-- Quick Info Card -->
-            <div class="card">
-                <div class="section-header">📌 Uttarakhand Quick Updates</div>
-                <p style="font-size:13px; color:#555;">Devbhoomi Uttarakhand ke sabhi 13 jilon ki breaking aur exclusive khabrein yahan padhein.</p>
-            </div>
-
-            <!-- Middle Ad Banner -->
-            <div class="ad-box" id="middleAd"></div>
-
-        </div>
-
     </div>
 
-    <!-- Footer -->
+    <!-- Footer Section -->
     <div class="footer">
+        <div class="footer-links">
+            <a href="about.html">About Us</a>
+            <a href="contact.html">Contact Us</a>
+            <a href="disclaimer.html">Disclaimer</a>
+            <a href="privacy.html">Privacy Policy</a>
+            <a href="terms.html">Terms & Conditions</a>
+        </div>
         <div class="social-links" id="socialLinksFooter" style="margin-bottom:12px;"></div>
         <p>© 2026 Uttarakhand Vision. All Rights Reserved.</p>
     </div>
 
+    <!-- JavaScript Engine -->
     <script>
         // Firebase Configuration
         const firebaseConfig = {
@@ -260,52 +442,31 @@
         let allNewsData = {};
 
         window.onload = function() {
-            document.getElementById('currentDate').innerText = getHindiFormattedDate(new Date());
+            document.getElementById('currentDate').innerHTML = `<i class="fa-regular fa-calendar"></i> ` + new Date().toLocaleDateString('hi-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
             loadSettings();
             loadBreakingNews();
             loadApprovedNews();
             loadAds();
-            loadEPaper();
         };
 
-        // Date Format Helper (Pure Hindi Date)
-        function getHindiFormattedDate(dateObj) {
-            return dateObj.toLocaleDateString('hi-IN', { 
-                weekday: 'long', 
-                year: 'numeric', 
-                month: 'long', 
-                day: 'numeric' 
-            });
-        }
-
-        // Print & Save PDF Trigger (Download wale din ki date dikhayega)
-        function printEPaper() {
-            document.getElementById('epaperIssueDate').innerText = `📅 अंक तिथि (डाउनलोड): ${getHindiFormattedDate(new Date())}`;
-            window.print();
-        }
-
-        // Render Media Helper (Photo, HTML5 Video, Youtube Embed & Shorts Support)
+        // Render Media (Image, Local Video or YouTube)
         function renderMedia(item) {
             if (item.videoUrl) {
                 return `<div class="video-container"><video controls src="${item.videoUrl}"></video></div>`;
-            }
-            if (item.youtubeUrl) {
-                // Enhanced Regular Expression for Standard YouTube URLs, Shorts, and Mobile Links
+            } else if (item.youtubeUrl) {
                 let regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|shorts\/|watch\?v=|\&v=)([^#\&\?]*).*/;
                 let match = item.youtubeUrl.match(regExp);
                 let embedId = (match && match[2].length === 11) ? match[2] : null;
-                
                 if (embedId) {
-                    return `<div class="video-container"><iframe src="https://www.youtube.com/embed/${embedId}" allowfullscreen frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"></iframe></div>`;
+                    return `<div class="video-container"><iframe src="https://www.youtube.com/embed/${embedId}" allowfullscreen></iframe></div>`;
                 }
-            }
-            if (item.image) {
+            } else if (item.image) {
                 return `<img src="${item.image}" class="news-media" alt="News Image">`;
             }
             return '';
         }
 
-        // 1. Fetch Approved Live News
+        // Fetch Approved News from Firebase
         function loadApprovedNews() {
             db.ref('approvedNews').on('value', snap => {
                 allNewsData = snap.val() || {};
@@ -313,233 +474,128 @@
             });
         }
 
+        // Render News on Homepage Grid and Slider
         function renderPortalNews(data) {
             const keys = Object.keys(data).reverse();
             const sliderBox = document.getElementById('mainSlider');
             const feedBox = document.getElementById('newsFeed');
 
             feedBox.innerHTML = '';
-            
             if(keys.length === 0) {
-                sliderBox.innerHTML = '<p>Abhi koi news uplabdh nahi hai.</p>';
-                feedBox.innerHTML = '<p>Taza khabrein jald hi update hongi.</p>';
+                sliderBox.innerHTML = '<p>अभी कोई मुख्य समाचार उपलब्ध नहीं है।</p>';
+                feedBox.innerHTML = '<p>ताज़ा खबरें जल्द ही अपडेट होंगी।</p>';
                 return;
             }
 
-            // Slider News Item
-            let sliderItem = keys.find(k => data[k].placements && data[k].placements.slider) || keys[0];
-            let itemS = data[sliderItem];
+            let sliderItemKey = keys.find(k => data[k].placements && data[k].placements.slider) || keys[0];
+            let itemS = data[sliderItemKey];
             
             sliderBox.innerHTML = `
-                ${renderMedia(itemS)}
-                <div class="meta">📍 ${itemS.district || 'Uttarakhand'} | 👤 ${itemS.reporterName || 'Admin'}</div>
-                <h3 style="margin: 5px 0 10px 0; color:#111;">${itemS.title}</h3>
-                <p style="font-size:14px; line-height:1.4;">${itemS.content}</p>
+                <div>
+                    ${renderMedia(itemS)}
+                    <div class="meta">📍 ${itemS.district || 'उत्तराखंड'} | 👤 ${itemS.reporterName || 'संपादक'}</div>
+                    <h3 style="margin: 5px 0 10px 0; color:#111; font-size:20px;">${itemS.title}</h3>
+                    <p style="font-size:14px; line-height:1.5; color:#444; margin-bottom:12px;">${itemS.content ? itemS.content.substring(0, 160) + '...' : ''}</p>
+                </div>
+                <a href="news-detail.html?id=${sliderItemKey}" class="read-more-btn">📖 पूरी खबर पढ़ें</a>
             `;
 
-            // Grid Items
             keys.forEach(k => {
                 let item = data[k];
-                feedBox.innerHTML += `
-                    <div class="news-item">
+                let fullText = item.content || item.description || item.body || item.text || '';
+                let shortContent = fullText.length > 95 ? fullText.substring(0, 95) + '...' : fullText;
+                
+                let itemDiv = document.createElement('div');
+                itemDiv.className = 'news-item';
+                itemDiv.innerHTML = `
+                    <div>
                         ${renderMedia(item)}
-                        <div class="meta">📍 ${item.district || 'Uttarakhand'} | 📌 ${item.category}</div>
+                        <div class="meta">📍 ${item.district || 'उत्तराखंड'} | 📌 ${item.category || 'सामान्य'}</div>
                         <h4>${item.title}</h4>
-                        <p style="font-size:13px; color:#555;">${item.content.substring(0, 100)}...</p>
+                        <p style="font-size:13px; color:#555; margin:0 0 10px 0; line-height:1.4;">${shortContent}</p>
                     </div>
+                    <a href="news-detail.html?id=${k}" class="read-more-btn">📖 पूरी खबर पढ़ें</a>
                 `;
+                feedBox.appendChild(itemDiv);
             });
         }
 
-        // Navigation Filter Function
-        function filterCategory(cat, btn) {
-            if(btn) {
-                document.querySelectorAll('.nav-bar a').forEach(a => a.classList.remove('active'));
-                btn.classList.add('active');
-            }
-
-            if(cat === 'epaper') {
-                document.getElementById('sliderSection').style.display = 'none';
-                document.getElementById('epaperSection').scrollIntoView({ behavior: 'smooth' });
-                return;
-            } else {
-                document.getElementById('sliderSection').style.display = 'block';
-            }
-
-            if(cat === 'all') {
-                renderPortalNews(allNewsData);
-                document.getElementById('feedTitle').innerText = '📰 Taza Samachar';
-                return;
-            }
-
+        // Filter News by Category or District
+        function filterCategory(cat) {
             const filtered = {};
             for(let k in allNewsData) {
                 if(allNewsData[k].category === cat || allNewsData[k].district === cat) {
                     filtered[k] = allNewsData[k];
                 }
             }
-
-            document.getElementById('feedTitle').innerText = `📰 ${cat} Khabrein`;
+            document.getElementById('feedTitle').innerText = `📰 ${cat} की खबरें`;
             renderPortalNews(filtered);
         }
 
-        // 2. Fetch Breaking News Ticker
+        // Load Breaking News Ticker
         function loadBreakingNews() {
             db.ref('breakingNews').on('value', snap => {
                 const data = snap.val() || {};
                 const list = Object.values(data).map(i => i.text);
                 const ticker = document.getElementById('breakingTicker');
-                if(list.length > 0) {
-                    ticker.innerText = list.join('   --- 🔴 ---   ');
-                } else {
-                    ticker.innerText = 'Uttarakhand Vision Par Apka Swagat Hai.';
+                if(list.length > 0) { 
+                    ticker.innerText = list.join('   --- 🔴 ---   '); 
                 }
             });
         }
 
-        // 3. AUTOMATIC WEEKLY E-PAPER GENERATOR (Pichhle 7 Dino Ki Approved News Se Swatah Banega)
-        function loadEPaper() {
-            db.ref('approvedNews').on('value', snap => {
-                const data = snap.val() || {};
-                const container = document.getElementById('epaperContent');
-                const dateSpan = document.getElementById('epaperIssueDate');
-                
-                // Set Header Issue Date to Today
-                dateSpan.innerText = `📅 अंक तिथि: ${getHindiFormattedDate(new Date())}`;
-
-                const oneWeekAgo = Date.now() - (7 * 24 * 60 * 60 * 1000);
-                const weeklyNewsList = [];
-
-                // Filter last 7 days news
-                for (let key in data) {
-                    let item = data[key];
-                    let itemTimestamp = item.createdAt || item.timestamp || Date.now();
-                    if (!item.isBreaking && itemTimestamp >= oneWeekAgo) {
-                        weeklyNewsList.push({
-                            ...item,
-                            time: itemTimestamp
-                        });
-                    }
-                }
-
-                // Sort: Latest News Date First
-                weeklyNewsList.sort((a, b) => b.time - a.time);
-
-                if (weeklyNewsList.length === 0) {
-                    container.innerHTML = `
-                        <div style="text-align:center; padding:30px 10px;">
-                            <h3>📰 उत्तराखंड विज़न - साप्ताहिक अंक (हल्द्वानी)</h3>
-                            <p style="color:#666;">इस सप्ताह की कोई मुख्य ख़बर उपलब्ध नहीं है।</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                // Date-wise Grouping for Newspaper Layout
-                const groupedByDate = {};
-                weeklyNewsList.forEach(item => {
-                    let newsDate = getHindiFormattedDate(new Date(item.time));
-                    if (!groupedByDate[newsDate]) {
-                        groupedByDate[newsDate] = [];
-                    }
-                    groupedByDate[newsDate].push(item);
-                });
-
-                // Generate Newspaper Layout
-                let paperHtml = `
-                    <div class="no-print" style="margin-bottom:20px; text-align:center;">
-                        <button onclick="printEPaper()" style="padding:12px 25px; background:#2e7d32; color:#fff; border:none; font-weight:bold; border-radius:4px; cursor:pointer; font-size:15px; box-shadow:0 3px 6px rgba(0,0,0,0.2);">
-                            🖨️ साप्ताहिक समाचार पत्र प्रिंट / PDF डाउनलोड करें
-                        </button>
-                    </div>
-                    <div class="epaper-print-container">
-                `;
-
-                for (let dateHeading in groupedByDate) {
-                    paperHtml += `
-                        <div style="border-bottom: 2px solid #b71c1c; margin: 20px 0 10px 0; padding-bottom: 4px;">
-                            <h3 style="margin: 0; color: #b71c1c; font-size: 18px; font-family:'Georgia', serif;">
-                                🗓️ समाचार दिनांक: ${dateHeading}
-                            </h3>
-                        </div>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
-                    `;
-
-                    groupedByDate[dateHeading].forEach(news => {
-                        paperHtml += `
-                            <div style="border: 1px solid #ccc; padding: 12px; background: #fff; border-radius: 4px;">
-                                ${news.image ? `<img src="${news.image}" style="width:100%; max-height:180px; object-fit:cover; margin-bottom:8px; border:1px solid #eee;">` : ''}
-                                <div style="font-size:11px; color:#666; font-weight:bold; margin-bottom:4px;">
-                                    📍 ${news.district || 'उत्तराखंड'} | 📌 ${news.category || 'सामान्य'}
-                                </div>
-                                <h4 style="margin: 0 0 6px 0; font-size: 16px; color: #111; line-height:1.3;">${news.title}</h4>
-                                <p style="margin: 0; font-size: 13px; color: #333; line-height: 1.4; text-align:justify;">${news.content}</p>
-                            </div>
-                        `;
-                    });
-
-                    paperHtml += `</div>`;
-                }
-
-                paperHtml += `</div>`;
-                container.innerHTML = paperHtml;
-            });
-        }
-
-        // 4. Advertisements Loader
+        // Load Dynamic Ads
         function loadAds() {
             db.ref('ads').on('value', snap => {
                 const ads = snap.val() || {};
-                if(ads.top && ads.top.imageUrl) {
-                    document.getElementById('topAd').innerHTML = `<a href="${ads.top.targetUrl || '#'}" target="_blank"><img src="${ads.top.imageUrl}"></a>`;
-                }
-                if(ads.middle && ads.middle.imageUrl) {
-                    document.getElementById('middleAd').innerHTML = `<a href="${ads.middle.targetUrl || '#'}" target="_blank"><img src="${ads.middle.imageUrl}"></a>`;
+                if (ads.middle && ads.middle.imageUrl) {
+                    document.getElementById('middleAd').innerHTML = `<a href="${ads.middle.targetUrl || '#'}" target="_blank"><img src="${ads.middle.imageUrl}" style="width:100%; max-height:100px; object-fit:cover; border-radius:5px;"></a>`;
                 }
             });
         }
 
-        // 5. Site Branding & Social Links Loader (Updated & Fixed)
+        // Load Site Customization Settings
         function loadSettings() {
             db.ref('siteSettings').on('value', snap => {
                 const data = snap.val() || {};
-
-                if(data.tagline) {
-                    document.getElementById('siteTagline').innerText = data.tagline;
+                if(data.tagline) { 
+                    document.getElementById('siteTagline').innerText = data.tagline; 
                 }
-
                 if(data.branding) {
-                    if(data.branding.logoUrl) {
-                        document.getElementById('siteLogo').innerHTML = `<img src="${data.branding.logoUrl}" style="max-height:55px;">`;
+                    if(data.branding.logoUrl) { 
+                        document.getElementById('siteLogo').innerHTML = `<img src="${data.branding.logoUrl}" style="max-height:55px;">`; 
                     }
                     if(data.branding.bannerUrl) {
-                        document.getElementById('siteBanner').innerHTML = `<img src="${data.branding.bannerUrl}">`;
+                        document.getElementById('siteBanner').innerHTML = `<img src="${data.branding.bannerUrl}" style="max-height:65px; border-radius:4px;">`;
                     }
                 }
-
-                // Handle Social Media Links Dynamic Display with FontAwesome Icons
                 if(data.social) {
-                    let socialLinksArray = [];
+                    let topSocialLinks = [];
+                    let footerSocialLinks = [];
 
                     if(data.social.facebook) {
-                        socialLinksArray.push(`<a href="${data.social.facebook}" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i> Facebook</a>`);
+                        topSocialLinks.push(`<a href="${data.social.facebook}" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>`);
+                        footerSocialLinks.push(`<a href="${data.social.facebook}" target="_blank"><i class="fab fa-facebook-f"></i> Facebook</a>`);
                     }
                     if(data.social.youtube) {
-                        socialLinksArray.push(`<a href="${data.social.youtube}" target="_blank" title="YouTube"><i class="fab fa-youtube"></i> YouTube</a>`);
+                        topSocialLinks.push(`<a href="${data.social.youtube}" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>`);
+                        footerSocialLinks.push(`<a href="${data.social.youtube}" target="_blank"><i class="fab fa-youtube"></i> YouTube</a>`);
                     }
                     if(data.social.whatsapp) {
-                        socialLinksArray.push(`<a href="${data.social.whatsapp}" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i> WhatsApp</a>`);
+                        topSocialLinks.push(`<a href="${data.social.whatsapp}" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>`);
+                        footerSocialLinks.push(`<a href="${data.social.whatsapp}" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>`);
                     }
                     if(data.social.twitter) {
-                        socialLinksArray.push(`<a href="${data.social.twitter}" target="_blank" title="Twitter"><i class="fab fa-x-twitter"></i> Twitter</a>`);
+                        topSocialLinks.push(`<a href="${data.social.twitter}" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>`);
+                        footerSocialLinks.push(`<a href="${data.social.twitter}" target="_blank"><i class="fab fa-twitter"></i> Twitter</a>`);
                     }
                     if(data.social.instagram) {
-                        socialLinksArray.push(`<a href="${data.social.instagram}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i> Instagram</a>`);
+                        topSocialLinks.push(`<a href="${data.social.instagram}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>`);
+                        footerSocialLinks.push(`<a href="${data.social.instagram}" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>`);
                     }
 
-                    const socialHtml = socialLinksArray.join(' | ');
-                    document.getElementById('socialLinksHeader').innerHTML = socialHtml;
-                    document.getElementById('socialLinksFooter').innerHTML = socialHtml;
+                    document.getElementById('socialLinksHeader').innerHTML = topSocialLinks.join('');
+                    document.getElementById('socialLinksFooter').innerHTML = footerSocialLinks.join(' | ');
                 }
             });
         }

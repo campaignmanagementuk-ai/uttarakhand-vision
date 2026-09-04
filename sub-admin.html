@@ -3,269 +3,707 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Reporter / Sub-Admin Panel - Uttarakhand Vision</title>
-    
-    <!-- Firebase Libraries -->
+    <title>Reporter Portal - News Submission Dashboard</title>
+
+    <!-- Firebase SDKs (v8) -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
     <style>
         :root {
-            --primary: #d32f2f;
-            --dark: #111;
-            --light: #f4f6f9;
+            --bg-main: #f8fafc;
+            --sidebar-bg: #1e293b;
+            --sidebar-hover: #334155;
+            --card-bg: #ffffff;
+            --text-dark: #0f172a;
+            --text-muted: #64748b;
+            --accent-blue: #2563eb;
+            --accent-green: #16a34a;
+            --accent-red: #dc2626;
+            --accent-yellow: #d97706;
+            --border-color: #e2e8f0;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
         }
-        body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--light); margin: 0; padding: 0; }
-        
-        .login-overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: #111; display: flex; justify-content: center; align-items: center; z-index: 9999; }
-        .login-box { background: #fff; padding: 30px; border-radius: 8px; width: 100%; max-width: 400px; box-shadow: 0 4px 20px rgba(0,0,0,0.5); }
-        .login-box h2 { color: var(--primary); margin-top: 0; text-align: center; }
 
-        .header { background: var(--dark); color: #fff; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
-        .header h1 { margin: 0; font-size: 20px; color: var(--primary); }
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
 
-        .container { max-width: 800px; margin: 30px auto; padding: 0 20px; }
-        .card { background: #fff; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
-        .card-header { border-bottom: 2px solid var(--primary); padding-bottom: 8px; margin-bottom: 20px; color: var(--primary); font-size: 18px; font-weight: bold; }
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
 
-        .form-group { margin-bottom: 18px; }
-        label { display: block; font-weight: bold; margin-bottom: 6px; color: #333; }
-        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; font-size: 14px; }
-        textarea { height: 120px; resize: vertical; }
+        /* --- Login Screen Styling --- */
+        #login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            padding: 20px;
+        }
 
-        .btn { padding: 12px 20px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.3s; font-size: 15px; }
-        .btn-primary { background: var(--primary); color: #fff; width: 100%; }
-        .btn-primary:hover { background: #b71c1c; }
-        .btn-logout { background: #555; color: #fff; padding: 6px 15px; }
+        .login-card {
+            background: #ffffff;
+            width: 100%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .login-card p {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 25px;
+        }
+
+        /* --- Dashboard Layout --- */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            z-index: 1000;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--sidebar-hover);
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 15px 10px;
+            flex-grow: 1;
+        }
+
+        .menu-link {
+            display: flex;
+            align-items: center;
+            padding: 12px 15px;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 5px;
+        }
+
+        .menu-link:hover, .menu-link.active {
+            background-color: var(--sidebar-hover);
+            color: #ffffff;
+        }
+
+        .main-wrapper {
+            margin-left: 260px;
+            width: calc(100% - 260px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-navbar {
+            background-color: #ffffff;
+            height: 65px;
+            padding: 0 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: var(--shadow-sm);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 36px;
+            height: 36px;
+            background-color: var(--accent-blue);
+            color: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .container {
+            padding: 30px;
+            flex-grow: 1;
+        }
+
+        /* --- Cards & Forms --- */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 25px;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-control:focus {
+            border-color: var(--accent-blue);
+        }
+
+        textarea.form-control {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .media-selector-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .media-tab-btn {
+            padding: 8px 14px;
+            border: 1px solid var(--border-color);
+            background: #f1f5f9;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .media-tab-btn.active {
+            background: var(--accent-blue);
+            color: #ffffff;
+            border-color: var(--accent-blue);
+        }
+
+        .btn {
+            padding: 10px 18px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            text-decoration: none;
+        }
+
+        .btn:hover { opacity: 0.9; }
+        .btn-primary { background-color: var(--accent-blue); color: #fff; }
+        .btn-danger { background-color: var(--accent-red); color: #fff; }
+        .btn-secondary { background-color: #64748b; color: #fff; }
+
+        /* --- Table Styling --- */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            padding: 12px 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--border-color);
+            font-size: 0.9rem;
+            vertical-align: middle;
+        }
+
+        .status-pill {
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .pill-pending { background-color: #fef3c7; color: #d97706; }
+        .pill-approved { background-color: #dcfce7; color: #15803d; }
+        .pill-rejected { background-color: #fee2e2; color: #b91c1c; }
+
+        .preview-img, .preview-video {
+            max-width: 250px;
+            max-height: 150px;
+            margin-top: 10px;
+            border-radius: 6px;
+            display: none;
+            object-fit: cover;
+        }
 
         .hidden { display: none !important; }
-        .user-badge { background: #e8f5e9; color: #2e7d32; padding: 10px 15px; border-radius: 5px; margin-bottom: 20px; font-weight: bold; border-left: 4px solid #2e7d32; }
-        .media-section { background: #fdf2f2; padding: 15px; border-radius: 6px; border: 1px dashed var(--primary); margin-bottom: 20px; }
+
+        @media (max-width: 768px) {
+            .sidebar { transform: translateX(-100%); }
+            .main-wrapper { margin-left: 0; width: 100%; }
+        }
     </style>
 </head>
 <body>
 
-    <!-- 🔒 LOGIN OVERLAY -->
-    <div id="loginOverlay" class="login-overlay">
-        <div class="login-box">
-            <h2>👤 Reporter Login</h2>
-            <div class="form-group">
-                <label>Reporter User ID</label>
-                <input type="text" id="subUserVal" placeholder="Apni User ID daalein">
-            </div>
-            <div class="form-group">
-                <label>Password</label>
-                <input type="password" id="subPassVal" placeholder="Password">
-            </div>
-            <button class="btn btn-primary" onclick="verifySubLogin()">Login Karein</button>
+    <!-- 1. LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <h2>Reporter Login</h2>
+            <p>Sub-Admin Portal Access</p>
+            <form id="login-form">
+                <div class="form-group">
+                    <input type="text" class="form-control" id="login-username" placeholder="Username" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" id="login-password" placeholder="Password" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%;">🔑 Log In</button>
+            </form>
         </div>
     </div>
 
-    <!-- MAIN REPORTER DASHBOARD -->
-    <div id="mainReporterDashboard" class="hidden">
-        <div class="header">
-            <h1>Uttarakhand Vision - Reporter Portal</h1>
-            <button class="btn btn-logout" onclick="logoutSub()">Logout</button>
-        </div>
-
-        <div class="container">
-            <div class="card">
-                <div class="user-badge" id="loggedInReporterName">Logged in as Reporter</div>
-                <div class="card-header">📰 Nayi Khabar Send Karein (Submit News Article)</div>
-
-                <form id="newsForm" onsubmit="submitNews(event)">
-                    <div class="form-group">
-                        <label>खबर का शीर्षक (Title)</label>
-                        <input type="text" id="newsTitle" placeholder="खबर का मुख्य शीर्षक (Hindi me type karein)" required>
-                    </div>
-
-                    <div class="form-group">
-                        <label>खबर का पूरा विवरण (Content)</label>
-                        <textarea id="newsContent" placeholder="पूरी खबर का विवरण यहाँ लिखें..." required></textarea>
-                    </div>
-
-                    <div class="form-group">
-                        <label>कैटेगरी (Category)</label>
-                        <select id="newsCategory" required>
-                            <option value="राज्य">राज्य (State News)</option>
-                            <option value="राजनीति">राजनीति (Politics)</option>
-                            <option value="अपराध">अपराध (Crime)</option>
-                            <option value="खेल">खेल (Sports)</option>
-                            <option value="व्यापार">व्यापार (Business)</option>
-                            <option value="मनोरंजन">मनोरंजन (Entertainment)</option>
-                            <option value="मौसम">मौसम (Weather)</option>
-                        </select>
-                    </div>
-
-                    <!-- MANDAL DROPDOWN -->
-                    <div class="form-group">
-                        <label>मंडल (Mandal)</label>
-                        <select id="newsMandal" onchange="updateDistrictDropdown()" required>
-                            <option value="कुमाऊं">कुमाऊं (Kumaon)</option>
-                            <option value="गढ़वाल">गढ़वाल (Garhwal)</option>
-                        </select>
-                    </div>
-
-                    <!-- DISTRICT DROPDOWN -->
-                    <div class="form-group">
-                        <label>जिला चुनें (Select District)</label>
-                        <select id="newsDistrict" required></select>
-                    </div>
-
-                    <!-- MEDIA ATTACHMENTS (OPTIONAL) -->
-                    <div class="media-section">
-                        <h4 style="margin-top:0; color:var(--primary);">📷 🎥 Media Attachments (Optional)</h4>
-
-                        <div class="form-group">
-                            <label>1. फोटो अपलोड करें (Image File)</label>
-                            <input type="file" id="newsImage" accept="image/*">
-                        </div>
-
-                        <div class="form-group">
-                            <label>2. वीडियो फाइल अपलोड करें (Video File - MP4)</label>
-                            <input type="file" id="newsVideoFile" accept="video/*">
-                        </div>
-
-                        <div class="form-group">
-                            <label>3. यूट्यूब वीडियो लिंक (YouTube Video URL)</label>
-                            <input type="url" id="newsYoutubeUrl" placeholder="https://www.youtube.com/watch?v=XXXXX">
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">Super Admin Ko Approval Ke Liye Bhejein</button>
-                </form>
+    <!-- 2. MAIN REPORTER DASHBOARD -->
+    <div id="dashboard-screen" class="app-container hidden">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h3>Reporter Panel</h3>
             </div>
+            <ul class="sidebar-menu">
+                <li>
+                    <a class="menu-link active" id="nav-add" onclick="switchTab('add')">
+                        📝 Submit New Article
+                    </a>
+                </li>
+                <li>
+                    <a class="menu-link" id="nav-history" onclick="switchTab('history')">
+                        📋 My Submissions
+                    </a>
+                </li>
+            </ul>
+            <div style="padding: 20px;">
+                <button class="btn btn-danger" style="width: 100%;" onclick="logout()">🚪 Logout</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="main-wrapper">
+            <header class="top-navbar">
+                <div style="font-weight: 600;" id="page-title">Submit News Article</div>
+                <div class="user-badge">
+                    <div class="user-avatar" id="user-avatar-char">R</div>
+                    <div>
+                        <div style="font-size: 0.85rem; font-weight: bold;" id="display-fullname">Reporter Name</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);" id="display-district">District</div>
+                    </div>
+                </div>
+            </header>
+
+            <main class="container">
+                
+                <!-- TAB 1: ADD NEWS FORM -->
+                <section id="tab-add">
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px;">Draft & Submit News for Super Admin Review</h3>
+                        <form id="news-form">
+                            <div class="form-group">
+                                <label>News Title (शीर्षक)</label>
+                                <input type="text" class="form-control" id="news-title" required placeholder="Enter compelling title...">
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                                <div class="form-group">
+                                    <label>Category (श्रेणी)</label>
+                                    <select class="form-control" id="news-category" required>
+                                        <option value="ताज़ा ख़बर">ताज़ा ख़बर (Breaking)</option>
+                                        <option value="राजनीति">राजनीति (Politics)</option>
+                                        <option value="क्राइम">क्राइम (Crime)</option>
+                                        <option value="खेल">खेल (Sports)</option>
+                                        <option value="मनोरंजन">मनोरंजन (Entertainment)</option>
+                                        <option value="राज्य/ज़िला">राज्य/ज़िला (State/District)</option>
+                                        <option value="व्यापार">व्यापार (Business)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>District / Mandal</label>
+                                    <input type="text" class="form-control" id="news-district" readonly>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>News Content (पूरी खबर)</label>
+                                <textarea class="form-control" id="news-content" required placeholder="Write detailed news content here..."></textarea>
+                            </div>
+
+                            <!-- MEDIA ATTACHMENT SECTION (IMAGE, VIDEO, YOUTUBE) -->
+                            <div class="form-group">
+                                <label>Attach Media (मीडिया संलग्न करें)</label>
+                                <div class="media-selector-tabs">
+                                    <button type="button" class="media-tab-btn active" id="tab-btn-image" onclick="selectMediaType('image')">📷 Photo</button>
+                                    <button type="button" class="media-tab-btn" id="tab-btn-video" onclick="selectMediaType('video')">🎥 Video File</button>
+                                    <button type="button" class="media-tab-btn" id="tab-btn-youtube" onclick="selectMediaType('youtube')">▶️ YouTube Link</button>
+                                </div>
+
+                                <!-- 1. Image Upload Box -->
+                                <div id="media-box-image">
+                                    <input type="file" class="form-control" id="news-image-file" accept="image/*" onchange="previewSelectedImage(event)">
+                                    <img id="image-preview" class="preview-img">
+                                </div>
+
+                                <!-- 2. Video Upload Box -->
+                                <div id="media-box-video" class="hidden">
+                                    <input type="file" class="form-control" id="news-video-file" accept="video/*" onchange="previewSelectedVideo(event)">
+                                    <video id="video-preview" class="preview-video" controls></video>
+                                    <small style="color: var(--text-muted); margin-top: 5px; display: block;">* Chhoti video files (Max 10-15MB) upload karein.</small>
+                                </div>
+
+                                <!-- 3. YouTube Link Box -->
+                                <div id="media-box-youtube" class="hidden">
+                                    <input type="url" class="form-control" id="news-youtube-url" placeholder="Paste YouTube Video URL (e.g. https://www.youtube.com/watch?v=...)">
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary" id="btn-submit">🚀 Submit to Super Admin</button>
+                        </form>
+                    </div>
+                </section>
+
+                <!-- TAB 2: MY SUBMISSIONS HISTORY -->
+                <section id="tab-history" class="hidden">
+                    <div class="card">
+                        <h3 style="margin-bottom: 20px;">My Article Submissions & Status</h3>
+                        <div class="table-responsive">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Media Type</th>
+                                        <th>Title</th>
+                                        <th>Category</th>
+                                        <th>Submitted On</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="my-history-tbody">
+                                    <tr><td colspan="5" style="text-align:center;">Loading history...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+
+            </main>
         </div>
     </div>
 
+    <!-- Firebase Script Logic -->
     <script>
+        // --- 1. FIREBASE INITIALIZATION ---
+        // Apni Firebase Config Details Yahan Daalein
         const firebaseConfig = {
-            apiKey: "AIzaSyAJQIrWDNkbbEatsbPPJ9uicQ0SuGyK6Qw",
-            authDomain: "uttarakhand-vision.firebaseapp.com",
-            databaseURL: "https://uttarakhand-vision-default-rtdb.firebaseio.com",
-            projectId: "uttarakhand-vision",
-            storageBucket: "uttarakhand-vision.firebasestorage.app",
-            messagingSenderId: "72349034061",
-            appId: "1:72349034061:web:2a9cfce56aaf04d5ef1e04",
-            measurementId: "G-X5F72XCJ2T"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_AUTH_DOMAIN",
+            databaseURL: "YOUR_DATABASE_URL",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_STORAGE_BUCKET",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
         };
+
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
+        // Active Session State
         let currentReporter = null;
+        let selectedMediaType = "image"; // Default: image
+        let base64MediaData = "";
 
-        const districtsData = {
-            "कुमाऊं": ["नैनीताल", "अल्मोड़ा", "पिथौरागढ़", "ऊधमसिंह नगर", "बागेश्वर", "चम्पावत"],
-            "गढ़वाल": ["देहरादून", "हरिद्वार", "पौड़ी गढ़वाल", "टिहरी गढ़वाल", "उत्तरकाशी", "चमोली", "रुद्रप्रयाग"]
-        };
+        // --- 2. AUTHENTICATION (LOGIN / LOGOUT) ---
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const userVal = document.getElementById('login-username').value.trim();
+            const passVal = document.getElementById('login-password').value.trim();
 
-        window.onload = function() {
-            const savedRep = sessionStorage.getItem('active_reporter');
-            if(savedRep) {
-                currentReporter = JSON.parse(savedRep);
-                showReporterDashboard();
-            }
-        };
-
-        function verifySubLogin() {
-            const u = document.getElementById('subUserVal').value.trim();
-            const p = document.getElementById('subPassVal').value.trim();
-
-            if(!u || !p) return alert('Username aur Password dono daalein!');
-
-            db.ref('subadmins').once('value').then(snap => {
-                const data = snap.val() || {};
-                let found = null;
-
-                for(let key in data) {
-                    if(data[key].username === u && data[key].password === p) {
-                        found = data[key];
-                        break;
-                    }
-                }
-
-                if(found) {
-                    currentReporter = found;
-                    sessionStorage.setItem('active_reporter', JSON.stringify(found));
-                    showReporterDashboard();
+            db.ref(`subadmins/${userVal}`).once('value').then(snap => {
+                const rep = snap.val();
+                if (rep && rep.password === passVal) {
+                    currentReporter = rep;
+                    localStorage.setItem('reporter_session', JSON.stringify(rep));
+                    initDashboard();
                 } else {
-                    alert('Galat User ID ya Password!');
+                    alert('गलत Username या Password! कृपया Super Admin से संपर्क करें।');
                 }
-            });
+            }).catch(err => alert('Login Error: ' + err.message));
+        });
+
+        function checkSession() {
+            const saved = localStorage.getItem('reporter_session');
+            if (saved) {
+                currentReporter = JSON.parse(saved);
+                initDashboard();
+            }
         }
 
-        function showReporterDashboard() {
-            document.getElementById('loginOverlay').classList.add('hidden');
-            document.getElementById('mainReporterDashboard').classList.remove('hidden');
-            document.getElementById('loggedInReporterName').innerText = `Logged in as Reporter: ${currentReporter.name} (${currentReporter.district || 'Uttarakhand'})`;
-            updateDistrictDropdown();
-        }
-
-        function logoutSub() {
-            sessionStorage.removeItem('active_reporter');
+        function logout() {
+            localStorage.removeItem('reporter_session');
             location.reload();
         }
 
-        function updateDistrictDropdown() {
-            const selectedMandal = document.getElementById('newsMandal').value;
-            const districtSelect = document.getElementById('newsDistrict');
-            districtSelect.innerHTML = '';
+        function initDashboard() {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('dashboard-screen').classList.remove('hidden');
 
-            const districtsList = districtsData[selectedMandal] || [];
-            districtsList.forEach(dist => {
-                const opt = document.createElement('option');
-                opt.value = dist;
-                opt.innerText = dist;
-                districtSelect.appendChild(opt);
-            });
+            document.getElementById('display-fullname').innerText = currentReporter.fullname || currentReporter.username;
+            document.getElementById('display-district').innerText = currentReporter.district || 'Reporter';
+            document.getElementById('user-avatar-char').innerText = (currentReporter.fullname || currentReporter.username).charAt(0).toUpperCase();
+            document.getElementById('news-district').value = currentReporter.district || '';
+
+            loadMyHistory();
         }
 
-        function submitNews(e) {
+        // --- 3. NAVIGATION SWITCHER ---
+        function switchTab(tabId) {
+            document.getElementById('tab-add').classList.add('hidden');
+            document.getElementById('tab-history').classList.add('hidden');
+            document.getElementById('nav-add').classList.remove('active');
+            document.getElementById('nav-history').classList.remove('active');
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`nav-${tabId}`).classList.add('active');
+
+            document.getElementById('page-title').innerText = tabId === 'add' ? 'Submit News Article' : 'My Submissions';
+        }
+
+        // --- 4. MEDIA TYPE TAB SWITCHER ---
+        function selectMediaType(type) {
+            selectedMediaType = type;
+            base64MediaData = ""; // Reset media buffer
+
+            // Update Tab UI
+            ['image', 'video', 'youtube'].forEach(t => {
+                document.getElementById(`tab-btn-${t}`).classList.remove('active');
+                document.getElementById(`media-box-${t}`).classList.add('hidden');
+            });
+
+            document.getElementById(`tab-btn-${type}`).classList.add('active');
+            document.getElementById(`media-box-${type}`).classList.remove('hidden');
+        }
+
+        // --- 5. MEDIA PREVIEW & PROCESSING ---
+        // Image Processing (Compressed Base64)
+        function previewSelectedImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const maxW = 800;
+                    const scale = maxW / img.width;
+                    
+                    canvas.width = maxW;
+                    canvas.height = img.height * scale;
+                    
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    base64MediaData = canvas.toDataURL('image/jpeg', 0.7);
+
+                    const preview = document.getElementById('image-preview');
+                    preview.src = base64MediaData;
+                    preview.style.display = 'block';
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // Video Processing (Base64)
+        function previewSelectedVideo(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (file.size > 20 * 1024 * 1024) { // 20MB Max Limit
+                alert("File size bahut badi hai! Kripya 20MB se chhoti video upload karein.");
+                e.target.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                base64MediaData = evt.target.result;
+                const preview = document.getElementById('video-preview');
+                preview.src = base64MediaData;
+                preview.style.display = 'block';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // --- 6. SUBMIT NEWS ARTICLE ---
+        document.getElementById('news-form').addEventListener('submit', (e) => {
             e.preventDefault();
 
-            const title = document.getElementById('newsTitle').value.trim();
-            const content = document.getElementById('newsContent').value.trim();
-            const category = document.getElementById('newsCategory').value;
-            const mandal = document.getElementById('newsMandal').value;
-            const district = document.getElementById('newsDistrict').value;
-            const ytUrl = document.getElementById('newsYoutubeUrl').value.trim();
+            const title = document.getElementById('news-title').value.trim();
+            const category = document.getElementById('news-category').value;
+            const content = document.getElementById('news-content').value.trim();
+            const district = currentReporter.district || 'General';
 
-            const imgFile = document.getElementById('newsImage').files[0];
-            const videoFile = document.getElementById('newsVideoFile').files[0];
+            let mediaUrl = "";
+            if (selectedMediaType === "youtube") {
+                mediaUrl = document.getElementById('news-youtube-url').value.trim();
+            } else {
+                mediaUrl = base64MediaData;
+            }
 
-            const readAsBase64 = (file) => {
-                return new Promise((resolve) => {
-                    if (!file) resolve('');
-                    const reader = new FileReader();
-                    reader.onload = evt => resolve(evt.target.result);
-                    reader.readAsDataURL(file);
-                });
+            const newPostRef = db.ref('pendingNews').push();
+            const payload = {
+                id: newPostRef.key,
+                title: title,
+                category: category,
+                content: content,
+                district: district,
+                mediaType: selectedMediaType, // 'image', 'video', or 'youtube'
+                image: selectedMediaType === 'image' ? mediaUrl : '', // backward compatibility
+                videoUrl: selectedMediaType === 'video' ? mediaUrl : '',
+                youtubeUrl: selectedMediaType === 'youtube' ? mediaUrl : '',
+                reporterUsername: currentReporter.username,
+                reporterName: currentReporter.fullname || currentReporter.username,
+                status: 'pending',
+                timestamp: firebase.database.ServerValue.TIMESTAMP
             };
 
-            Promise.all([readAsBase64(imgFile), readAsBase64(videoFile)]).then(([imgBase64, videoBase64]) => {
-                const newRef = db.ref('pendingNews').push();
-                const newsData = {
-                    id: newRef.key,
-                    title: title,
-                    content: content,
-                    category: category,
-                    mandal: mandal,
-                    district: district,
-                    image: imgBase64 || '',
-                    video: videoBase64 || '',
-                    youtubeUrl: ytUrl || '',
-                    reporterName: currentReporter.name,
-                    reporterId: currentReporter.username,
-                    timestamp: Date.now()
-                };
+            newPostRef.set(payload).then(() => {
+                alert('आपकी ख़बर (Media के साथ) सफलतापूर्वक Super Admin को भेज दी गई है!');
+                document.getElementById('news-form').reset();
+                document.getElementById('image-preview').style.display = 'none';
+                document.getElementById('video-preview').style.display = 'none';
+                base64MediaData = "";
+                switchTab('history');
+            }).catch(err => alert('Error submitting news: ' + err.message));
+        });
 
-                newRef.set(newsData).then(() => {
-                    alert('Khabar (Media ke saath) Super Admin ko bheji gayi hai!');
-                    document.getElementById('newsForm').reset();
-                    updateDistrictDropdown();
+        // --- 7. LOAD REPORTER HISTORY ---
+        function loadMyHistory() {
+            const username = currentReporter.username;
+            const tbody = document.getElementById('my-history-tbody');
+
+            Promise.all([
+                db.ref('pendingNews').once('value'),
+                db.ref('approvedNews').once('value'),
+                db.ref('rejectedNews').once('value')
+            ]).then(snapshots => {
+                tbody.innerHTML = '';
+                let myList = [];
+
+                snapshots.forEach((snap, idx) => {
+                    const data = snap.val() || {};
+                    Object.keys(data).forEach(k => {
+                        if (data[k].reporterUsername === username) {
+                            myList.push({
+                                ...data[k],
+                                listType: idx === 0 ? 'Pending' : (idx === 1 ? 'Approved' : 'Rejected')
+                            });
+                        }
+                    });
+                });
+
+                if (myList.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">You have not submitted any news articles yet.</td></tr>';
+                    return;
+                }
+
+                myList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+                myList.forEach(item => {
+                    const typeLabel = item.mediaType ? item.mediaType.toUpperCase() : 'IMAGE';
+                    const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '-';
+                    
+                    let pillClass = 'pill-pending';
+                    if (item.listType === 'Approved') pillClass = 'pill-approved';
+                    if (item.listType === 'Rejected') pillClass = 'pill-rejected';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td><strong>${typeLabel}</strong></td>
+                            <td><strong>${escapeHtml(item.title || 'Untitled')}</strong></td>
+                            <td>${item.category || '-'}</td>
+                            <td>${dateStr}</td>
+                            <td><span class="status-pill ${pillClass}">${item.listType}</span></td>
+                        </tr>
+                    `;
                 });
             });
         }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        window.onload = function() {
+            checkSession();
+        };
     </script>
 </body>
 </html>
