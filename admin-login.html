@@ -5,74 +5,89 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Super Admin Panel - Uttarakhand Vision</title>
     
-    <!-- FontAwesome & CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Firebase Libraries -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 
     <style>
         :root {
             --primary: #d32f2f;
+            --primary-dark: #b71c1c;
             --sidebar-bg: #0f172a;
+            --sidebar-hover: #1e293b;
             --main-bg: #f8fafc;
             --border: #e2e8f0;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #64748b;
         }
 
-        * { box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-        body { margin: 0; padding: 0; background: var(--main-bg); display: flex; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; font-family: 'Inter', 'Segoe UI', sans-serif; }
+        body { margin: 0; padding: 0; background: var(--main-bg); display: flex; height: 100vh; overflow: hidden; color: var(--text-main); }
 
         /* Sidebar Styling */
         .sidebar { width: 260px; background: var(--sidebar-bg); color: #fff; flex-shrink: 0; display: flex; flex-direction: column; }
-        .sidebar-brand { padding: 20px; font-size: 18px; font-weight: bold; border-bottom: 1px solid #1e293b; background: #020617; color: #fff; }
+        .sidebar-brand { padding: 20px; font-size: 18px; font-weight: 700; border-bottom: 1px solid #1e293b; background: #020617; color: #fff; display: flex; align-items: center; gap: 10px; }
         .sidebar-menu { list-style: none; padding: 10px 0; margin: 0; flex-grow: 1; overflow-y: auto; }
-        .sidebar-menu li a { display: flex; align-items: center; padding: 12px 20px; color: #94a3b8; text-decoration: none; font-size: 14px; gap: 12px; transition: 0.2s; }
-        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: #1e293b; color: #fff; border-left: 4px solid var(--primary); }
+        .sidebar-menu li a { display: flex; align-items: center; padding: 12px 20px; color: #94a3b8; text-decoration: none; font-size: 14px; font-weight: 500; gap: 12px; transition: 0.2s; border-left: 4px solid transparent; }
+        .sidebar-menu li a:hover, .sidebar-menu li a.active { background: var(--sidebar-hover); color: #fff; border-left-color: var(--primary); }
 
-        /* Main Content Area */
+        /* Main Wrapper */
         .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; sticky: top; }
         .content-area { padding: 25px; }
 
         /* Panels & Cards */
         .panel-section { display: none; }
         .panel-section.active { display: block; }
-        .card { background: #fff; padding: 20px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        .card-header { font-size: 16px; font-weight: bold; margin-bottom: 15px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; color: #0f172a; }
+        .card { background: var(--card-bg); padding: 22px; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 22px; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+        .card-header { font-size: 16px; font-weight: 700; margin-bottom: 18px; border-bottom: 2px solid var(--primary); padding-bottom: 8px; color: var(--text-main); display: flex; justify-content: space-between; align-items: center; }
 
-        /* Form Inputs */
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; }
-        .form-group { margin-bottom: 12px; }
-        .form-group label { display: block; font-size: 13px; font-weight: bold; margin-bottom: 5px; color: #475569; }
-        .form-control { width: 100%; padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 5px; font-size: 14px; }
+        /* Forms & Inputs */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: #475569; }
+        .form-control { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; transition: 0.2s; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.1); }
         
         /* Buttons */
-        .btn { padding: 8px 14px; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; }
+        .btn { padding: 9px 16px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); }
         .btn-success { background: #16a34a; color: #fff; }
         .btn-danger { background: #dc2626; color: #fff; }
         .btn-warning { background: #d97706; color: #fff; }
-        .btn-sm { padding: 5px 10px; font-size: 12px; }
+        .btn-secondary { background: #64748b; color: #fff; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; }
 
         /* Data Tables */
         .data-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
-        .data-table th, .data-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); }
-        .data-table th { background: #f1f5f9; color: #475569; font-weight: bold; }
-        
-        /* Modal Popup */
+        .data-table th, .data-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid var(--border); vertical-align: middle; }
+        .data-table th { background: #f8fafc; color: #475569; font-weight: 700; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+        .data-table tr:hover { background: #f1f5f9; }
+        .table-thumb { width: 60px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid var(--border); background: #e2e8f0; }
+
+        /* Modal Popups */
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 9999; }
-        .modal-content { background: #fff; width: 90%; max-width: 600px; padding: 20px; border-radius: 8px; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: #fff; width: 90%; max-width: 650px; padding: 25px; border-radius: 8px; max-height: 90vh; overflow-y: auto; }
         
-        /* Stats Card */
-        .stat-card { background: #f1f5f9; padding: 15px; border-radius: 6px; text-align: center; border-left: 4px solid var(--primary); }
-        .stat-card h2 { margin: 5px 0 0 0; color: var(--primary); }
+        /* Ad Media Preview Boxes */
+        .media-preview-box { width: 100%; max-height: 180px; overflow: hidden; border: 1px dashed #cbd5e1; border-radius: 6px; margin-top: 10px; display: flex; align-items: center; justify-content: center; background: #f8fafc; }
+        .media-preview-box img, .media-preview-box video { max-width: 100%; max-height: 170px; object-fit: contain; }
+        
+        /* Stats */
+        .stat-card { background: #f1f5f9; padding: 18px; border-radius: 8px; text-align: center; border-left: 4px solid var(--primary); }
+        .stat-card h2 { margin: 5px 0 0 0; color: var(--primary); font-size: 28px; }
     </style>
 </head>
 <body>
 
-    <!-- Sidebar Navigation -->
     <div class="sidebar">
-        <div class="sidebar-brand">⚡ Super Admin Panel</div>
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-bolt" style="color: var(--primary);"></i> Super Admin Panel
+        </div>
         <ul class="sidebar-menu">
             <li><a href="javascript:void(0);" class="active" onclick="switchTab('dashboard', this)"><i class="fa-solid fa-chart-line"></i> Dashboard Analytics</a></li>
             <li><a href="javascript:void(0);" onclick="switchTab('analyticsReports', this)"><i class="fa-solid fa-chart-pie"></i> Reporter & Date Analytics</a></li>
@@ -86,31 +101,32 @@
         </ul>
     </div>
 
-    <!-- Main Content Wrapper -->
     <div class="main-wrapper">
         <div class="top-bar">
-            <h3 id="panelTitle" style="margin: 0; font-size: 18px;">Dashboard Analytics</h3>
-            <div><strong>Admin:</strong> Super Administrator</div>
+            <h3 id="panelTitle" style="margin: 0; font-size: 18px; font-weight: 700;">Dashboard Analytics</h3>
+            <div style="font-size: 14px;"><strong>Admin:</strong> <span style="color: var(--primary);">Super Administrator</span></div>
         </div>
 
         <div class="content-area">
 
-            <!-- 1. DASHBOARD OVERVIEW -->
             <div id="dashboard" class="panel-section active">
                 <div class="card">
                     <div class="card-header">वेलकम सुपर एडमिन</div>
-                    <p>उत्तराखंड विज़न न्यूज़ पोर्टल के एडमिन पैनल में आपका स्वागत है। यहाँ से आप खबरें, विज्ञापन, रिपोर्टर और साइट सेटिंग्स पूरी तरह मैनेज कर सकते हैं।</p>
+                    <p>उत्तराखंड विज़न न्यूज़ पोर्टल के एडमिन पैनल में आपका स्वागत है। यहाँ से आप न्यूज़, विज्ञापन, रिपोर्टर्स, ई-पेपर और साइट सेटिंग्स को नियंत्रित कर सकते हैं।</p>
                 </div>
             </div>
 
-            <!-- 2. DATE & REPORTER ANALYTICS -->
             <div id="analyticsReports" class="panel-section">
                 <div class="card">
-                    <div class="card-header">रिपोर्टर और तारीख़ के अनुसार न्यूज़ एनालिटिक्स (Filter Reports)</div>
+                    <div class="card-header">रिपोर्टर और तारीख़ रेंज के अनुसार न्यूज़ एनालिटिक्स (Filter Reports)</div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>तारीख़ चुनें (Select Date):</label>
-                            <input type="date" id="filterDate" class="form-control" onchange="runAnalyticsFilter()">
+                            <label>किस तारीख़ से (From Date):</label>
+                            <input type="date" id="filterFromDate" class="form-control" onchange="runAnalyticsFilter()">
+                        </div>
+                        <div class="form-group">
+                            <label>किस तारीख़ तक (To Date):</label>
+                            <input type="date" id="filterToDate" class="form-control" onchange="runAnalyticsFilter()">
                         </div>
                         <div class="form-group">
                             <label>रिपोर्टर चुनें (Select Reporter):</label>
@@ -122,16 +138,17 @@
                 </div>
 
                 <div class="card">
-                    <div class="card-header">फिल्टर परिणाम (Analytics Result)</div>
+                    <div class="card-header">फिल्टर परिणाम (Analytics Results)</div>
                     <div class="form-grid" style="margin-bottom: 15px;">
                         <div class="stat-card">
-                            <span>कुल मिली खबरें (Total Found):</span>
+                            <span>कुल मिली ख़बरें (Total Found):</span>
                             <h2 id="analyticsCount">0</h2>
                         </div>
                     </div>
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>मीडिया</th>
                                 <th>शीर्षक (Title)</th>
                                 <th>कैटेगरी</th>
                                 <th>ज़िला</th>
@@ -144,13 +161,13 @@
                 </div>
             </div>
 
-            <!-- 3. PENDING NEWS APPROVALS -->
             <div id="pendingNews" class="panel-section">
                 <div class="card">
-                    <div class="card-header">Pending News Approvals (स्वीकृति हेतु लंबित खबरें)</div>
+                    <div class="card-header">Pending News Approvals (स्वीकृति हेतु लंबित ख़बरें)</div>
                     <table class="data-table">
                         <thead>
                             <tr>
+                                <th>मीडिया</th>
                                 <th>शीर्षक (Title)</th>
                                 <th>कैटेगरी</th>
                                 <th>ज़िला</th>
@@ -163,18 +180,21 @@
                 </div>
             </div>
 
-            <!-- 4. LIVE APPROVED NEWS (EDIT & DELETE) -->
             <div id="approvedNews" class="panel-section">
                 <div class="card">
-                    <div class="card-header">Live Approved Published News</div>
+                    <div class="card-header">
+                        <span>Approved Published News</span>
+                        <input type="text" id="searchApprovedNews" placeholder="Search news..." class="form-control" style="width: 250px; padding: 6px 10px;" onkeyup="searchNewsTable()">
+                    </div>
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>शीर्षक (Title)</th>
-                                <th>कैटेगरी</th>
-                                <th>ज़िला</th>
-                                <th>रिपोर्टर</th>
-                                <th>एक्शन</th>
+                                <th>MEDIA</th>
+                                <th>TITLE</th>
+                                <th>CATEGORY</th>
+                                <th>REPORTER</th>
+                                <th>PUBLISH DATE</th>
+                                <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody id="approvedNewsTable"></tbody>
@@ -182,59 +202,78 @@
                 </div>
             </div>
 
-            <!-- 5. MANAGE ADVERTISEMENTS (IMAGE + VIDEO + LINK) -->
             <div id="manageAds" class="panel-section">
                 <div class="card">
-                    <div class="card-header">1. Header Top Ad (ऊपरी विज्ञापन - Photo/Video + Link)</div>
+                    <div class="card-header">1. Header Top Ad Banner (ऊपरी बैनर विज्ञापन)</div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>विज्ञापन प्रकार (Ad Type):</label>
                             <select id="headerAdType" class="form-control">
-                                <option value="image">इमेज विज्ञापन (Image Ad)</option>
-                                <option value="video">वीडियो विज्ञापन (Video Embed/MP4)</option>
+                                <option value="image">इमेज विज्ञापन (Image)</option>
+                                <option value="video">वीडियो विज्ञापन (Video/Mp4)</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>फोटो या वीडियो का URL Link:</label>
-                            <input type="text" id="headerAdMedia" class="form-control" placeholder="https://example.com/ad.png या Video Link">
+                            <label>गैलरी / सिस्टम से अपलोड करें:</label>
+                            <input type="file" id="headerAdFile" class="form-control" accept="image/*,video/*" onchange="handleAdFileUpload(this, 'headerAdMedia', 'headerPreview')">
                         </div>
                         <div class="form-group">
-                            <label>क्लिक करने पर खुलने वाली वेबसाइट (Target URL):</label>
+                            <label>या डायरेक्ट URL लिंक डालें:</label>
+                            <input type="text" id="headerAdMedia" class="form-control" placeholder="https://example.com/ad.png">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Website Link (क्लिक पर खुलने वाला लिंक):</label>
                             <input type="text" id="headerAdTarget" class="form-control" placeholder="https://example.com">
                         </div>
+                    </div>
+                    <div class="media-preview-box" id="headerPreview">
+                        <span style="color: var(--text-muted); font-size: 12px;">कोई Header Ad सेट नहीं है</span>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="saveHeaderAd()"><i class="fa-solid fa-floppy-disk"></i> Header Ad सेव करें</button>
+                        <button class="btn btn-danger" onclick="deleteAd('header')"><i class="fa-solid fa-trash"></i> Remove Header Ad</button>
                     </div>
                 </div>
 
                 <div class="card">
-                    <div class="card-header">2. Middle Feed Ad (खबरों के बीच का विज्ञापन - Photo/Video + Link)</div>
+                    <div class="card-header">2. Middle Feed Ad (खबरों के बीच का विज्ञापन)</div>
                     <div class="form-grid">
                         <div class="form-group">
                             <label>विज्ञापन प्रकार (Ad Type):</label>
                             <select id="middleAdType" class="form-control">
-                                <option value="image">इमेज विज्ञापन (Image Ad)</option>
-                                <option value="video">वीडियो विज्ञापन (Video Embed/MP4)</option>
+                                <option value="image">इमेज विज्ञापन (Image)</option>
+                                <option value="video">वीडियो विज्ञापन (Video/Mp4)</option>
                             </select>
                         </div>
                         <div class="form-group">
-                            <label>फोटो या वीडियो का URL Link:</label>
-                            <input type="text" id="middleAdMedia" class="form-control" placeholder="https://example.com/ad.png या Video Link">
+                            <label>गैलरी / सिस्टम से अपलोड करें:</label>
+                            <input type="file" id="middleAdFile" class="form-control" accept="image/*,video/*" onchange="handleAdFileUpload(this, 'middleAdMedia', 'middlePreview')">
                         </div>
                         <div class="form-group">
-                            <label>क्लिक करने पर खुलने वाली वेबसाइट (Target URL):</label>
+                            <label>या डायरेक्ट URL लिंक डालें:</label>
+                            <input type="text" id="middleAdMedia" class="form-control" placeholder="https://example.com/ad.png">
+                        </div>
+                        <div class="form-group">
+                            <label>Target Website Link (क्लिक पर खुलने वाला लिंक):</label>
                             <input type="text" id="middleAdTarget" class="form-control" placeholder="https://example.com">
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveAds()"><i class="fa-solid fa-floppy-disk"></i> विज्ञापन सेटिंग्स सुरक्षित करें</button>
+                    <div class="media-preview-box" id="middlePreview">
+                        <span style="color: var(--text-muted); font-size: 12px;">कोई Middle Ad सेट नहीं है</span>
+                    </div>
+                    <div style="margin-top: 15px; display: flex; gap: 10px;">
+                        <button class="btn btn-primary" onclick="saveMiddleAd()"><i class="fa-solid fa-floppy-disk"></i> Middle Ad सेव करें</button>
+                        <button class="btn btn-danger" onclick="deleteAd('middle')"><i class="fa-solid fa-trash"></i> Remove Middle Ad</button>
+                    </div>
                 </div>
             </div>
 
-            <!-- 6. BREAKING NEWS -->
             <div id="breakingNews" class="panel-section">
                 <div class="card">
                     <div class="card-header">ऐड नई ब्रेकिंग न्यूज़</div>
                     <div class="form-group">
                         <label>ब्रेकिंग न्यूज़ टेक्स्ट:</label>
-                        <input type="text" id="breakingText" class="form-control" placeholder="यहाँ ब्रेकिंग न्यूज़ दर्ज करें...">
+                        <input type="text" id="breakingText" class="form-control" placeholder="यहाँ ताज़ा ब्रेकिंग न्यूज़ दर्ज करें...">
                     </div>
                     <button class="btn btn-primary" onclick="addBreakingNews()"><i class="fa-solid fa-plus"></i> ब्रेकिंग न्यूज़ जोड़ें</button>
                 </div>
@@ -252,10 +291,9 @@
                 </div>
             </div>
 
-            <!-- 7. E-NEWSPAPER CONTROL -->
             <div id="epaper" class="panel-section">
                 <div class="card">
-                    <div class="card-header">E-Paper (साप्ताहिक ई-समाचार पत्र) की खबरें</div>
+                    <div class="card-header">E-Paper (साप्ताहिक ई-समाचार पत्र) की ख़बरें</div>
                     <table class="data-table">
                         <thead>
                             <tr>
@@ -269,29 +307,28 @@
                 </div>
             </div>
 
-            <!-- 8. REPORTER MANAGEMENT (DISTRICT DROPDOWN INCLUDED) -->
             <div id="reporters" class="panel-section">
                 <div class="card">
-                    <div class="card-header">नया रिपोर्टर / Sub-Admin पंजीकृत करें</div>
+                    <div class="card-header">Register New Reporter / Sub-Admin</div>
                     <div class="form-grid">
                         <div class="form-group">
-                            <label>पूरा नाम (Full Name):</label>
-                            <input type="text" id="repName" class="form-control" placeholder="उदा. राहुल शर्मा">
+                            <label>Full Name (पूरा नाम):</label>
+                            <input type="text" id="repName" class="form-control" placeholder="उदा. Rahul Sharma">
                         </div>
                         <div class="form-group">
-                            <label>यूज़रनेम (Unique Login ID):</label>
+                            <label>Username (Unique Login ID):</label>
                             <input type="text" id="repUsername" class="form-control" placeholder="e.g. reporter_rahul">
                         </div>
                         <div class="form-group">
-                            <label>पासवर्ड:</label>
+                            <label>Password:</label>
                             <input type="text" id="repPassword" class="form-control" placeholder="Login Password">
                         </div>
                         <div class="form-group">
-                            <label>ज़िला (District / Mandal) चुनें:</label>
+                            <label>Assigned District / Mandal:</label>
                             <select id="repDistrict" class="form-control">
                                 <optgroup label="गढ़वाल मंडल">
-                                    <option value="Dehradun">देहरादून</option>
-                                    <option value="Haridwar">हरिद्वार</option>
+                                    <option value="Dehradun">देहरादून (Dehradun)</option>
+                                    <option value="Haridwar">हरिद्वार (Haridwar)</option>
                                     <option value="Pauri Garhwal">पौड़ी गढ़वाल</option>
                                     <option value="Tehri Garhwal">टिहरी गढ़वाल</option>
                                     <option value="Uttarkashi">उत्तरकाशी</option>
@@ -309,7 +346,7 @@
                             </select>
                         </div>
                     </div>
-                    <button class="btn btn-success" onclick="createReporter()"><i class="fa-solid fa-user-plus"></i> रिपोर्टर खाता बनाएँ</button>
+                    <button class="btn btn-primary" onclick="createReporter()"><i class="fa-solid fa-user-plus"></i> Create Reporter Account</button>
                 </div>
 
                 <div class="card">
@@ -317,11 +354,11 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>नाम (Name)</th>
-                                <th>यूज़रनेम</th>
-                                <th>ज़िला</th>
-                                <th>पासवर्ड</th>
-                                <th>एक्शन</th>
+                                <th>NAME</th>
+                                <th>USERNAME</th>
+                                <th>DISTRICT</th>
+                                <th>PASSWORD</th>
+                                <th>ACTION</th>
                             </tr>
                         </thead>
                         <tbody id="reportersTable"></tbody>
@@ -329,7 +366,6 @@
                 </div>
             </div>
 
-            <!-- 9. SITE SETTINGS (LOGO, TAGLINE & SOCIAL MEDIA) -->
             <div id="siteSettings" class="panel-section">
                 <div class="card">
                     <div class="card-header">ब्रांडिंग एवं टैगलाइन सेटिंग्स</div>
@@ -337,10 +373,20 @@
                         <label>टैगलाइन (Tagline):</label>
                         <input type="text" id="settingTagline" class="form-control" placeholder="उदा. सच सबसे पहले, देवभूमि की हर आवाज़">
                     </div>
-                    <div class="form-group">
-                        <label>लोगो इमेज URL:</label>
-                        <input type="text" id="settingLogo" class="form-control" placeholder="https://example.com/logo.png">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>गैलरी से नया लोगो चुनें:</label>
+                            <input type="file" id="settingLogoFile" class="form-control" accept="image/*" onchange="handleLogoUpload(this)">
+                        </div>
+                        <div class="form-group">
+                            <label>या लोगो का URL Link:</label>
+                            <input type="text" id="settingLogo" class="form-control" placeholder="https://example.com/logo.png">
+                        </div>
                     </div>
+                    <div class="media-preview-box" id="logoPreviewBox" style="height: 80px; margin-bottom: 12px;">
+                        <span style="color: var(--text-muted); font-size: 12px;">कोई लोगो लोड नहीं है</span>
+                    </div>
+                    <button class="btn btn-primary" onclick="saveBrandingSettings()"><i class="fa-solid fa-floppy-disk"></i> ब्रांडिंग सेटिंग्स सुरक्षित करें</button>
                 </div>
 
                 <div class="card">
@@ -367,14 +413,13 @@
                             <input type="text" id="socialInsta" class="form-control">
                         </div>
                     </div>
-                    <button class="btn btn-primary" onclick="saveSiteSettings()"><i class="fa-solid fa-floppy-disk"></i> सेटिंग्स सुरक्षित करें</button>
+                    <button class="btn btn-primary" onclick="saveSocialSettings()"><i class="fa-solid fa-floppy-disk"></i> सोशल लिंक्स सुरक्षित करें</button>
                 </div>
             </div>
 
         </div>
     </div>
 
-    <!-- Edit News Modal Popup -->
     <div id="editModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0;">खबर संपादित करें (Edit News)</h3>
@@ -388,13 +433,23 @@
                 <textarea id="editContent" class="form-control" rows="6"></textarea>
             </div>
             <div style="text-align: right; gap: 10px; display: flex; justify-content: flex-end;">
-                <button class="btn btn-danger" onclick="closeEditModal()">रद्द करें</button>
+                <button class="btn btn-secondary" onclick="closeEditModal()">रद्द करें</button>
                 <button class="btn btn-success" onclick="saveEditedNews()">अपडेट करें</button>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript Sync Logic -->
+    <div id="viewModal" class="modal">
+        <div class="modal-content">
+            <h3 id="viewTitle" style="margin-top:0; color: var(--primary);"></h3>
+            <div id="viewMedia" style="margin-bottom: 15px; text-align: center;"></div>
+            <p id="viewContent" style="white-space: pre-line; line-height: 1.6;"></p>
+            <div style="text-align: right;">
+                <button class="btn btn-secondary" onclick="document.getElementById('viewModal').style.display='none'">बंद करें</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyDWxB-KOkWNn2Z4sRUtLQuTxy-ZUCNxK1s",
@@ -420,7 +475,6 @@
             loadAds();
         };
 
-        // Tab Switching
         function switchTab(tabId, el) {
             document.querySelectorAll('.panel-section').forEach(sec => sec.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu a').forEach(a => a.classList.remove('active'));
@@ -429,7 +483,7 @@
             document.getElementById('panelTitle').innerText = el.innerText.trim();
         }
 
-        // 1. Pending Approvals
+        /* 1. Pending News */
         function loadPendingNews() {
             db.ref('pendingNews').on('value', snap => {
                 const data = snap.val() || {};
@@ -437,12 +491,14 @@
                 table.innerHTML = '';
                 for(let k in data) {
                     let item = data[k];
+                    let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb">` : `<span style="color:#aaa;">No Media</span>`;
                     table.innerHTML += `
                         <tr>
+                            <td>${mediaHtml}</td>
                             <td><strong>${item.title}</strong></td>
                             <td>${item.category || '-'}</td>
                             <td>${item.district || '-'}</td>
-                            <td>${item.reporterName || '-'}</td>
+                            <td>${item.reporterName || item.reporter || '-'}</td>
                             <td>
                                 <button class="btn btn-success btn-sm" onclick="approveNews('${k}')"><i class="fa-solid fa-check"></i> Approve</button>
                                 <button class="btn btn-danger btn-sm" onclick="rejectNews('${k}')"><i class="fa-solid fa-xmark"></i> Reject</button>
@@ -459,7 +515,7 @@
                 if(newsData) {
                     db.ref('approvedNews/' + id).set(newsData, () => {
                         db.ref('pendingNews/' + id).remove();
-                        alert('खबर सफलतापूर्वक लाइव अप्रूव कर दी गई है!');
+                        alert('खबर सफलतापूर्वक लाइव अप्रूव हो गई!');
                     });
                 }
             });
@@ -471,46 +527,61 @@
             }
         }
 
-        // 2. Approved Live News (Edit/Delete)
+        /* 2. Approved Live News */
         function loadApprovedNews() {
             db.ref('approvedNews').on('value', snap => {
                 allApprovedNewsCache = snap.val() || {};
-                const table = document.getElementById('approvedNewsTable');
-                const epaperTable = document.getElementById('epaperTable');
-                table.innerHTML = '';
-                epaperTable.innerHTML = '';
-
-                for(let k in allApprovedNewsCache) {
-                    let item = allApprovedNewsCache[k];
-                    
-                    let row = `
-                        <tr>
-                            <td><strong>${item.title}</strong></td>
-                            <td>${item.category || '-'}</td>
-                            <td>${item.district || '-'}</td>
-                            <td>${item.reporterName || '-'}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="openEditModal('${k}', \`${item.title}\`, \`${item.content || ''}\`)"><i class="fa-solid fa-pen"></i> Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteNews('${k}')"><i class="fa-solid fa-trash"></i> Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                    table.innerHTML += row;
-
-                    let epRow = `
-                        <tr>
-                            <td><strong>${item.title}</strong></td>
-                            <td>${new Date(item.createdAt || Date.now()).toLocaleDateString('hi-IN')}</td>
-                            <td>
-                                <button class="btn btn-warning btn-sm" onclick="openEditModal('${k}', \`${item.title}\`, \`${item.content || ''}\`)"><i class="fa-solid fa-pen"></i> Edit</button>
-                                <button class="btn btn-danger btn-sm" onclick="deleteNews('${k}')"><i class="fa-solid fa-trash"></i> Delete</button>
-                            </td>
-                        </tr>
-                    `;
-                    epaperTable.innerHTML += epRow;
-                }
+                renderApprovedTable(allApprovedNewsCache);
+                loadEpaperTable(allApprovedNewsCache);
                 runAnalyticsFilter();
             });
+        }
+
+        function renderApprovedTable(data) {
+            const table = document.getElementById('approvedNewsTable');
+            table.innerHTML = '';
+            for(let k in data) {
+                let item = data[k];
+                let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb">` : `<span style="color:#aaa;">No Media</span>`;
+                let pDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('hi-IN') : (item.date || '-');
+
+                table.innerHTML += `
+                    <tr>
+                        <td>${mediaHtml}</td>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.category || '-'}</td>
+                        <td>${item.reporterName || item.reporter || '-'}</td>
+                        <td>${pDate}</td>
+                        <td>
+                            <button class="btn btn-secondary btn-sm" onclick="viewNews('${k}')"><i class="fa-solid fa-eye"></i> View</button>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal('${k}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteNews('${k}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        function searchNewsTable() {
+            let q = document.getElementById('searchApprovedNews').value.toLowerCase();
+            let filtered = {};
+            for(let k in allApprovedNewsCache) {
+                let item = allApprovedNewsCache[k];
+                if(item.title && item.title.toLowerCase().includes(q)) {
+                    filtered[k] = item;
+                }
+            }
+            renderApprovedTable(filtered);
+        }
+
+        function viewNews(id) {
+            let item = allApprovedNewsCache[id];
+            if(item) {
+                document.getElementById('viewTitle').innerText = item.title;
+                document.getElementById('viewContent').innerText = item.content || '';
+                document.getElementById('viewMedia').innerHTML = item.imageUrl ? `<img src="${item.imageUrl}" style="max-width:100%; max-height:250px; border-radius:6px;">` : '';
+                document.getElementById('viewModal').style.display = 'flex';
+            }
         }
 
         function deleteNews(id) {
@@ -519,11 +590,14 @@
             }
         }
 
-        function openEditModal(id, title, content) {
-            document.getElementById('editNewsId').value = id;
-            document.getElementById('editTitle').value = title;
-            document.getElementById('editContent').value = content;
-            document.getElementById('editModal').style.display = 'flex';
+        function openEditModal(id) {
+            let item = allApprovedNewsCache[id];
+            if(item) {
+                document.getElementById('editNewsId').value = id;
+                document.getElementById('editTitle').value = item.title;
+                document.getElementById('editContent').value = item.content || '';
+                document.getElementById('editModal').style.display = 'flex';
+            }
         }
 
         function closeEditModal() {
@@ -546,9 +620,10 @@
             });
         }
 
-        // 3. Analytics (Date & Reporter Filter)
+        /* 3. Analytics (From Date & To Date Range Filter) */
         function runAnalyticsFilter() {
-            let selDate = document.getElementById('filterDate').value;
+            let fromD = document.getElementById('filterFromDate').value;
+            let toD = document.getElementById('filterToDate').value;
             let selReporter = document.getElementById('filterReporter').value;
             let tbody = document.getElementById('analyticsTable');
             tbody.innerHTML = '';
@@ -557,45 +632,107 @@
 
             for(let k in allApprovedNewsCache) {
                 let item = allApprovedNewsCache[k];
-                let itemDate = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : '';
+                let itemDateStr = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : '';
                 let itemReporter = item.reporterName || item.reporter || 'Unknown';
 
-                let matchDate = !selDate || itemDate === selDate;
+                let matchDate = true;
+                if(fromD && itemDateStr < fromD) matchDate = false;
+                if(toD && itemDateStr > toD) matchDate = false;
+
                 let matchReporter = selReporter === 'ALL' || itemReporter === selReporter;
 
                 if(matchDate && matchReporter) {
                     count++;
+                    let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb">` : `<span style="color:#aaa;">No Media</span>`;
                     tbody.innerHTML += `
                         <tr>
+                            <td>${mediaHtml}</td>
                             <td><strong>${item.title}</strong></td>
                             <td>${item.category || '-'}</td>
                             <td>${item.district || '-'}</td>
                             <td>${itemReporter}</td>
-                            <td>${itemDate || '-'}</td>
+                            <td>${itemDateStr || '-'}</td>
                         </tr>
                     `;
                 }
             }
-
             document.getElementById('analyticsCount').innerText = count;
         }
 
-        // 4. Advertisements Management (Photo/Video + Link)
-        function saveAds() {
-            db.ref('ads').set({
-                header: {
-                    type: document.getElementById('headerAdType').value,
-                    mediaUrl: document.getElementById('headerAdMedia').value,
-                    targetUrl: document.getElementById('headerAdTarget').value
-                },
-                middle: {
-                    type: document.getElementById('middleAdType').value,
-                    mediaUrl: document.getElementById('middleAdMedia').value,
-                    targetUrl: document.getElementById('middleAdTarget').value
+        /* 4. Advertisements Management (Upload + Delete + Preview) */
+        function handleAdFileUpload(input, targetInputId, previewBoxId) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById(targetInputId).value = e.target.result;
+                    renderAdPreview(previewBoxId, e.target.result, 'image');
                 }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function renderAdPreview(boxId, url, type) {
+            let box = document.getElementById(boxId);
+            if(!url) {
+                box.innerHTML = `<span style="color: var(--text-muted); font-size: 12px;">कोई विज्ञापन सेट नहीं है</span>`;
+                return;
+            }
+            if(type === 'video' || url.includes('.mp4') || url.includes('data:video')) {
+                box.innerHTML = `<video src="${url}" controls autoplay loop muted></video>`;
+            } else {
+                box.innerHTML = `<img src="${url}">`;
+            }
+        }
+
+        function saveHeaderAd() {
+            let type = document.getElementById('headerAdType').value;
+            let media = document.getElementById('headerAdMedia').value;
+            let target = document.getElementById('headerAdTarget').value;
+
+            db.ref('ads/header').set({
+                type: type,
+                mediaUrl: media,
+                targetUrl: target
             }, err => {
-                if(!err) alert('विज्ञापन सेटिंग्स सफलतापूर्वक अपडेट हो गईं!');
+                if(!err) {
+                    alert('Header Ad सफलतापूर्वक सुरक्षित हो गया!');
+                    renderAdPreview('headerPreview', media, type);
+                }
             });
+        }
+
+        function saveMiddleAd() {
+            let type = document.getElementById('middleAdType').value;
+            let media = document.getElementById('middleAdMedia').value;
+            let target = document.getElementById('middleAdTarget').value;
+
+            db.ref('ads/middle').set({
+                type: type,
+                mediaUrl: media,
+                targetUrl: target
+            }, err => {
+                if(!err) {
+                    alert('Middle Ad सफलतापूर्वक सुरक्षित हो गया!');
+                    renderAdPreview('middlePreview', media, type);
+                }
+            });
+        }
+
+        function deleteAd(pos) {
+            if(confirm(`क्या आप सचमुच ${pos} Ad को हटाना चाहते हैं?`)) {
+                db.ref('ads/' + pos).remove(() => {
+                    alert('विज्ञापन हटा दिया गया है!');
+                    if(pos === 'header') {
+                        document.getElementById('headerAdMedia').value = '';
+                        document.getElementById('headerAdTarget').value = '';
+                        renderAdPreview('headerPreview', '', 'image');
+                    } else {
+                        document.getElementById('middleAdMedia').value = '';
+                        document.getElementById('middleAdTarget').value = '';
+                        renderAdPreview('middlePreview', '', 'image');
+                    }
+                });
+            }
         }
 
         function loadAds() {
@@ -605,19 +742,21 @@
                     document.getElementById('headerAdType').value = ads.header.type || 'image';
                     document.getElementById('headerAdMedia').value = ads.header.mediaUrl || '';
                     document.getElementById('headerAdTarget').value = ads.header.targetUrl || '';
+                    renderAdPreview('headerPreview', ads.header.mediaUrl, ads.header.type);
                 }
                 if(ads.middle) {
                     document.getElementById('middleAdType').value = ads.middle.type || 'image';
                     document.getElementById('middleAdMedia').value = ads.middle.mediaUrl || '';
                     document.getElementById('middleAdTarget').value = ads.middle.targetUrl || '';
+                    renderAdPreview('middlePreview', ads.middle.mediaUrl, ads.middle.type);
                 }
             });
         }
 
-        // 5. Breaking News
+        /* 5. Breaking News System */
         function addBreakingNews() {
             let text = document.getElementById('breakingText').value;
-            if(!text) return alert('कृपया ब्रेकिंग न्यूज़ टेक्स्ट लिखें');
+            if(!text) return alert('कृपया टेक्स्ट दर्ज करें');
 
             db.ref('breakingNews').push({ text: text }, () => {
                 document.getElementById('breakingText').value = '';
@@ -641,7 +780,27 @@
             });
         }
 
-        // 6. Reporter Accounts
+        /* 6. E-Newspaper Table */
+        function loadEpaperTable(data) {
+            const epTable = document.getElementById('epaperTable');
+            epTable.innerHTML = '';
+            for(let k in data) {
+                let item = data[k];
+                let pDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('hi-IN') : '-';
+                epTable.innerHTML += `
+                    <tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${pDate}</td>
+                        <td>
+                            <button class="btn btn-warning btn-sm" onclick="openEditModal('${k}')"><i class="fa-solid fa-pen"></i> Edit</button>
+                            <button class="btn btn-danger btn-sm" onclick="deleteNews('${k}')"><i class="fa-solid fa-trash"></i> Delete</button>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+
+        /* 7. Reporters Management (NAME FIX) */
         function createReporter() {
             let name = document.getElementById('repName').value;
             let username = document.getElementById('repUsername').value;
@@ -656,7 +815,12 @@
                 password: password,
                 district: district
             }, err => {
-                if(!err) alert('रिपोर्टर का खाता बन गया!');
+                if(!err) {
+                    alert('रिपोर्टर खाता बन गया!');
+                    document.getElementById('repName').value = '';
+                    document.getElementById('repUsername').value = '';
+                    document.getElementById('repPassword').value = '';
+                }
             });
         }
 
@@ -670,39 +834,54 @@
 
                 for(let k in data) {
                     let r = data[k];
-                    let repName = r.fullName || r.name || r.username;
-                    
+                    let displayName = r.fullName || r.name || r.username;
                     table.innerHTML += `
                         <tr>
-                            <td><strong>${repName}</strong></td>
+                            <td><strong>${displayName}</strong></td>
                             <td>${r.username}</td>
-                            <td>${r.district}</td>
+                            <td>${r.district || '-'}</td>
                             <td>${r.password}</td>
                             <td><button class="btn btn-danger btn-sm" onclick="db.ref('reporters/${k}').remove()"><i class="fa-solid fa-trash"></i> Delete Account</button></td>
                         </tr>
                     `;
-
-                    filterDropdown.innerHTML += `<option value="${repName}">${repName}</option>`;
+                    filterDropdown.innerHTML += `<option value="${displayName}">${displayName}</option>`;
                 }
             });
         }
 
-        // 7. Site Settings & Social Media Links
-        function saveSiteSettings() {
-            db.ref('siteSettings').set({
-                tagline: document.getElementById('settingTagline').value,
-                branding: {
-                    logoUrl: document.getElementById('settingLogo').value
-                },
-                social: {
-                    facebook: document.getElementById('socialFb').value,
-                    youtube: document.getElementById('socialYt').value,
-                    whatsapp: document.getElementById('socialWa').value,
-                    twitter: document.getElementById('socialTw').value,
-                    instagram: document.getElementById('socialInsta').value
+        /* 8. Logo & Site Settings */
+        function handleLogoUpload(input) {
+            if (input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('settingLogo').value = e.target.result;
+                    document.getElementById('logoPreviewBox').innerHTML = `<img src="${e.target.result}" style="max-height: 70px;">`;
                 }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveBrandingSettings() {
+            let tagline = document.getElementById('settingTagline').value;
+            let logoUrl = document.getElementById('settingLogo').value;
+
+            db.ref('siteSettings/branding').set({
+                logoUrl: logoUrl
+            });
+            db.ref('siteSettings/tagline').set(tagline, err => {
+                if(!err) alert('ब्रांडिंग एवं टैगलाइन सफलतापूर्वक सुरक्षित हो गईं!');
+            });
+        }
+
+        function saveSocialSettings() {
+            db.ref('siteSettings/social').set({
+                facebook: document.getElementById('socialFb').value,
+                youtube: document.getElementById('socialYt').value,
+                whatsapp: document.getElementById('socialWa').value,
+                twitter: document.getElementById('socialTw').value,
+                instagram: document.getElementById('socialInsta').value
             }, err => {
-                if(!err) alert('साइट सेटिंग्स और सोशल मीडिया लिंक्स सफलतापूर्वक सुरक्षित हो गए!');
+                if(!err) alert('सोशल मीडिया लिंक्स सफलतापूर्वक सुरक्षित हो गए!');
             });
         }
 
@@ -710,7 +889,10 @@
             db.ref('siteSettings').once('value', snap => {
                 const data = snap.val() || {};
                 if(data.tagline) document.getElementById('settingTagline').value = data.tagline;
-                if(data.branding && data.branding.logoUrl) document.getElementById('settingLogo').value = data.branding.logoUrl;
+                if(data.branding && data.branding.logoUrl) {
+                    document.getElementById('settingLogo').value = data.branding.logoUrl;
+                    document.getElementById('logoPreviewBox').innerHTML = `<img src="${data.branding.logoUrl}" style="max-height: 70px;">`;
+                }
                 if(data.social) {
                     document.getElementById('socialFb').value = data.social.facebook || '';
                     document.getElementById('socialYt').value = data.social.youtube || '';
