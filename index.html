@@ -643,7 +643,13 @@
                 return;
             }
 
-            let sliderItemKey = keys.find(k => data[k].placements && data[k].placements.slider) || keys[0];
+            // यहाँ एडमिन द्वारा चुनी गई Featured/Slider खबर को ढूँढने का लॉजिक ठीक किया गया है
+            let sliderItemKey = keys.find(k => {
+                let itm = data[k];
+                return (itm.placements && (itm.placements.slider || itm.placements.featured)) || 
+                       itm.placement === 'featured' || itm.placement === 'slider' || itm.isFeatured === true;
+            }) || keys[0];
+
             let itemS = data[sliderItemKey];
             
             sliderBox.innerHTML = `
@@ -688,8 +694,9 @@
 
             const filtered = {};
             for(let k in allNewsData) {
-                if(allNewsData[k].category === cat || allNewsData[k].district === cat) {
-                    filtered[k] = allNewsData[k];
+                let item = allNewsData[k];
+                if(item.category === cat || item.district === cat || item.city === cat) {
+                    filtered[k] = item;
                 }
             }
             document.getElementById('feedTitle').innerText = `📰 ${cat} की खबरें`;
@@ -862,36 +869,8 @@
                         document.getElementById('siteLogo').innerHTML = `<img src="${data.branding.logoUrl}" style="max-height:55px;">`; 
                     }
                     if(data.branding.bannerUrl) {
-                        document.getElementById('siteBanner').innerHTML = `<img src="${data.branding.bannerUrl}" style="max-height:65px; border-radius:4px;">`;
+                        document.getElementById('siteBanner').innerHTML = `<img src="${data.branding.bannerUrl}" style="max-height:65px;">`;
                     }
-                }
-                if(data.social) {
-                    let topSocialLinks = [];
-                    let footerSocialLinks = [];
-
-                    if(data.social.facebook) {
-                        topSocialLinks.push(`<a href="${data.social.facebook}" target="_blank" title="Facebook"><i class="fab fa-facebook-f"></i></a>`);
-                        footerSocialLinks.push(`<a href="${data.social.facebook}" target="_blank"><i class="fab fa-facebook-f"></i> Facebook</a>`);
-                    }
-                    if(data.social.youtube) {
-                        topSocialLinks.push(`<a href="${data.social.youtube}" target="_blank" title="YouTube"><i class="fab fa-youtube"></i></a>`);
-                        footerSocialLinks.push(`<a href="${data.social.youtube}" target="_blank"><i class="fab fa-youtube"></i> YouTube</a>`);
-                    }
-                    if(data.social.whatsapp) {
-                        topSocialLinks.push(`<a href="${data.social.whatsapp}" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>`);
-                        footerSocialLinks.push(`<a href="${data.social.whatsapp}" target="_blank"><i class="fab fa-whatsapp"></i> WhatsApp</a>`);
-                    }
-                    if(data.social.twitter) {
-                        topSocialLinks.push(`<a href="${data.social.twitter}" target="_blank" title="Twitter"><i class="fab fa-x-twitter"></i></a>`);
-                        footerSocialLinks.push(`<a href="${data.social.twitter}" target="_blank"><i class="fab fa-x-twitter"></i> Twitter</a>`);
-                    }
-                    if(data.social.instagram) {
-                        topSocialLinks.push(`<a href="${data.social.instagram}" target="_blank" title="Instagram"><i class="fab fa-instagram"></i></a>`);
-                        footerSocialLinks.push(`<a href="${data.social.instagram}" target="_blank"><i class="fab fa-instagram"></i> Instagram</a>`);
-                    }
-
-                    document.getElementById('socialLinksHeader').innerHTML = topSocialLinks.join('');
-                    document.getElementById('socialLinksFooter').innerHTML = footerSocialLinks.join('');
                 }
             });
         }

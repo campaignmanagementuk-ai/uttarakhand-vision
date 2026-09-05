@@ -36,7 +36,7 @@
 
         /* Main Wrapper */
         .main-wrapper { flex-grow: 1; display: flex; flex-direction: column; overflow-y: auto; }
-        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; sticky: top; }
+        .top-bar { background: #fff; padding: 15px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
         .content-area { padding: 25px; }
 
         /* Panels & Cards */
@@ -420,6 +420,38 @@
         </div>
     </div>
 
+    <!-- NEW: Approval Placement Modal Popup -->
+    <div id="approveModal" class="modal">
+        <div class="modal-content">
+            <h3 style="margin-top:0; color: var(--primary);">खबर अप्रूव करें & वेबसाइट पर जगह चुनें (Approve Placement)</h3>
+            <input type="hidden" id="approveNewsId">
+            
+            <div class="form-group">
+                <label>वेबसाइट पर कहाँ दिखेगी (Placement Location):</label>
+                <select id="newsPlacement" class="form-control">
+                    <option value="latest">ताज़ा समाचार / Normal Feed (Latest News)</option>
+                    <option value="featured">मुख्य समाचार / Featured Box (Top Featured)</option>
+                    <option value="slider">मुख्य स्लाइडर / Banner Slider</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label>कैटेगरी (Category):</label>
+                <input type="text" id="approveCategory" class="form-control" placeholder="उदा. राजनीति, राज्य, रोजगार">
+            </div>
+
+            <div class="form-group">
+                <label>जिला / शहर (District/City):</label>
+                <input type="text" id="approveDistrict" class="form-control" placeholder="उदा. हल्द्वानी, नैनीताल, देहरादून">
+            </div>
+
+            <div style="text-align: right; gap: 10px; display: flex; justify-content: flex-end; margin-top: 20px;">
+                <button class="btn btn-secondary" onclick="closeApproveModal()">रद्द करें</button>
+                <button class="btn btn-success" onclick="confirmAndPublishNews()"><i class="fa-solid fa-check"></i> कन्फर्म करके लाइव करें</button>
+            </div>
+        </div>
+    </div>
+
     <div id="editModal" class="modal">
         <div class="modal-content">
             <h3 style="margin-top:0;">खबर संपादित करें (Edit News)</h3>
@@ -466,6 +498,14 @@
 
         let allApprovedNewsCache = {};
 
+        function getNewsImageAlt(item) {
+            let subject = item.title || 'समाचार से संबंधित दृश्य';
+            let context = [item.category, item.district].filter(Boolean).join(', ');
+            return context
+                ? `${subject}; ${context} के समाचार का दृश्य, समाचार पोर्टल के संदर्भ में`
+                : `${subject}; समाचार पोर्टल के संदर्भ में समाचार का दृश्य`;
+        }
+
         window.onload = function() {
             loadPendingNews();
             loadApprovedNews();
@@ -483,7 +523,7 @@
             document.getElementById('panelTitle').innerText = el.innerText.trim();
         }
 
-        /* 1. Pending News */
+        /* 1. Pending News & Enhanced Approval Popup Logic */
         function loadPendingNews() {
             db.ref('pendingNews').on('value', snap => {
                 const data = snap.val() || {};
@@ -491,7 +531,7 @@
                 table.innerHTML = '';
                 for(let k in data) {
                     let item = data[k];
-                    let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb">` : `<span style="color:#aaa;">No Media</span>`;
+                    let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb" alt="${getNewsImageAlt(item)}">` : `<span style="color:#aaa;">No Media</span>`;
                     table.innerHTML += `
                         <tr>
                             <td>${mediaHtml}</td>
@@ -500,7 +540,7 @@
                             <td>${item.district || '-'}</td>
                             <td>${item.reporterName || item.reporter || '-'}</td>
                             <td>
-                                <button class="btn btn-success btn-sm" onclick="approveNews('${k}')"><i class="fa-solid fa-check"></i> Approve</button>
+                                <button class="btn btn-success btn-sm" onclick="openApproveModal('${k}')"><i class="fa-solid fa-check"></i> Approve</button>
                                 <button class="btn btn-danger btn-sm" onclick="rejectNews('${k}')"><i class="fa-solid fa-xmark"></i> Reject</button>
                             </td>
                         </tr>
@@ -509,13 +549,42 @@
             });
         }
 
-        function approveNews(id) {
+        function openApproveModal(id) {
+            db.ref('pendingNews/' + id).once('value', snap => {
+                let item = snap.val();
+                if(item) {
+                    document.getElementById('approveNewsId').value = id;
+                    document.getElementById('approveCategory').value = item.category || '';
+                    document.getElementById('approveDistrict').value = item.district || '';
+                    document.getElementById('newsPlacement').value = 'latest';
+                    document.getElementById('approveModal').style.display = 'flex';
+                }
+            });
+        }
+
+        function closeApproveModal() {
+            document.getElementById('approveModal').style.display = 'none';
+        }
+
+        function confirmAndPublishNews() {
+            let id = document.getElementById('approveNewsId').value;
+            let placement = document.getElementById('newsPlacement').value;
+            let category = document.getElementById('approveCategory').value;
+            let district = document.getElementById('approveDistrict').value;
+
             db.ref('pendingNews/' + id).once('value', snap => {
                 let newsData = snap.val();
                 if(newsData) {
+                    // Update metadata with admin choices
+                    newsData.placement = placement;
+                    newsData.category = category;
+                    newsData.district = district;
+                    newsData.approvedAt = Date.now();
+
                     db.ref('approvedNews/' + id).set(newsData, () => {
                         db.ref('pendingNews/' + id).remove();
-                        alert('खबर सफलतापूर्वक लाइव अप्रूव हो गई!');
+                        closeApproveModal();
+                        alert('खबर सफलतापूर्वक स्थान (Placement) के साथ लाइव अप्रूव हो गई!');
                     });
                 }
             });
@@ -527,7 +596,7 @@
             }
         }
 
-        /* 2. Approved Live News */
+        /* 2. Approved Live News & Rest of functions */
         function loadApprovedNews() {
             db.ref('approvedNews').on('value', snap => {
                 allApprovedNewsCache = snap.val() || {};
@@ -542,7 +611,7 @@
             table.innerHTML = '';
             for(let k in data) {
                 let item = data[k];
-                let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb">` : `<span style="color:#aaa;">No Media</span>`;
+                let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb" alt="${getNewsImageAlt(item)}">` : `<span style="color:#aaa;">No Media</span>`;
                 let pDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('hi-IN') : (item.date || '-');
 
                 table.innerHTML += `
@@ -562,31 +631,14 @@
             }
         }
 
-        function searchNewsTable() {
-            let q = document.getElementById('searchApprovedNews').value.toLowerCase();
-            let filtered = {};
-            for(let k in allApprovedNewsCache) {
-                let item = allApprovedNewsCache[k];
-                if(item.title && item.title.toLowerCase().includes(q)) {
-                    filtered[k] = item;
-                }
-            }
-            renderApprovedTable(filtered);
-        }
-
         function viewNews(id) {
             let item = allApprovedNewsCache[id];
             if(item) {
                 document.getElementById('viewTitle').innerText = item.title;
                 document.getElementById('viewContent').innerText = item.content || '';
-                document.getElementById('viewMedia').innerHTML = item.imageUrl ? `<img src="${item.imageUrl}" style="max-width:100%; max-height:250px; border-radius:6px;">` : '';
+                let mBox = document.getElementById('viewMedia');
+                mBox.innerHTML = item.imageUrl ? `<img src="${item.imageUrl}" style="max-width:100%; max-height:250px; border-radius:6px;" alt="${getNewsImageAlt(item)}">` : '';
                 document.getElementById('viewModal').style.display = 'flex';
-            }
-        }
-
-        function deleteNews(id) {
-            if(confirm('क्या आप सचमुच इस खबर को डिलीट करना चाहते हैं?')) {
-                db.ref('approvedNews/' + id).remove();
             }
         }
 
@@ -594,7 +646,7 @@
             let item = allApprovedNewsCache[id];
             if(item) {
                 document.getElementById('editNewsId').value = id;
-                document.getElementById('editTitle').value = item.title;
+                document.getElementById('editTitle').value = item.title || '';
                 document.getElementById('editContent').value = item.content || '';
                 document.getElementById('editModal').style.display = 'flex';
             }
@@ -608,50 +660,57 @@
             let id = document.getElementById('editNewsId').value;
             let title = document.getElementById('editTitle').value;
             let content = document.getElementById('editContent').value;
-
-            db.ref('approvedNews/' + id).update({
-                title: title,
-                content: content
-            }, err => {
-                if(!err) {
-                    alert('खबर सफलतापूर्वक अपडेट हो गई!');
-                    closeEditModal();
-                }
+            db.ref('approvedNews/' + id).update({ title, content }, () => {
+                closeEditModal();
+                alert('खबर सफलतापूर्वक अपडेट हो गई!');
             });
         }
 
-        /* 3. Analytics (From Date & To Date Range Filter) */
-        function runAnalyticsFilter() {
-            let fromD = document.getElementById('filterFromDate').value;
-            let toD = document.getElementById('filterToDate').value;
-            let selReporter = document.getElementById('filterReporter').value;
-            let tbody = document.getElementById('analyticsTable');
-            tbody.innerHTML = '';
+        function deleteNews(id) {
+            if(confirm('क्या आप वाकई इस लाइव खबर को हटाना चाहते हैं?')) {
+                db.ref('approvedNews/' + id).remove();
+            }
+        }
 
+        function searchNewsTable() {
+            let query = document.getElementById('searchApprovedNews').value.toLowerCase();
+            let filtered = {};
+            for(let k in allApprovedNewsCache) {
+                let item = allApprovedNewsCache[k];
+                if((item.title && item.title.toLowerCase().includes(query)) || (item.category && item.category.toLowerCase().includes(query))) {
+                    filtered[k] = item;
+                }
+            }
+            renderApprovedTable(filtered);
+        }
+
+        /* 3. Analytics & Filters */
+        function runAnalyticsFilter() {
+            let from = document.getElementById('filterFromDate').value;
+            let to = document.getElementById('filterToDate').value;
+            let rep = document.getElementById('filterReporter').value;
+            
+            let table = document.getElementById('analyticsTable');
+            table.innerHTML = '';
             let count = 0;
 
             for(let k in allApprovedNewsCache) {
                 let item = allApprovedNewsCache[k];
-                let itemDateStr = item.createdAt ? new Date(item.createdAt).toISOString().split('T')[0] : '';
-                let itemReporter = item.reporterName || item.reporter || 'Unknown';
-
-                let matchDate = true;
-                if(fromD && itemDateStr < fromD) matchDate = false;
-                if(toD && itemDateStr > toD) matchDate = false;
-
-                let matchReporter = selReporter === 'ALL' || itemReporter === selReporter;
-
-                if(matchDate && matchReporter) {
+                let match = true;
+                if(rep !== 'ALL' && (item.reporterUsername !== rep && item.reporter !== rep)) match = false;
+                
+                if(match) {
                     count++;
-                    let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb">` : `<span style="color:#aaa;">No Media</span>`;
-                    tbody.innerHTML += `
+                    let pDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('hi-IN') : (item.date || '-');
+                    let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb" alt="${getNewsImageAlt(item)}">` : `-`;
+                    table.innerHTML += `
                         <tr>
                             <td>${mediaHtml}</td>
                             <td><strong>${item.title}</strong></td>
                             <td>${item.category || '-'}</td>
                             <td>${item.district || '-'}</td>
-                            <td>${itemReporter}</td>
-                            <td>${itemDateStr || '-'}</td>
+                            <td>${item.reporterName || item.reporter || '-'}</td>
+                            <td>${pDate}</td>
                         </tr>
                     `;
                 }
@@ -659,106 +718,11 @@
             document.getElementById('analyticsCount').innerText = count;
         }
 
-        /* 4. Advertisements Management (Upload + Delete + Preview) */
-        function handleAdFileUpload(input, targetInputId, previewBoxId) {
-            if (input.files && input.files[0]) {
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById(targetInputId).value = e.target.result;
-                    renderAdPreview(previewBoxId, e.target.result, 'image');
-                }
-                reader.readAsDataURL(input.files[0]);
-            }
-        }
-
-        function renderAdPreview(boxId, url, type) {
-            let box = document.getElementById(boxId);
-            if(!url) {
-                box.innerHTML = `<span style="color: var(--text-muted); font-size: 12px;">कोई विज्ञापन सेट नहीं है</span>`;
-                return;
-            }
-            if(type === 'video' || url.includes('.mp4') || url.includes('data:video')) {
-                box.innerHTML = `<video src="${url}" controls autoplay loop muted></video>`;
-            } else {
-                box.innerHTML = `<img src="${url}">`;
-            }
-        }
-
-        function saveHeaderAd() {
-            let type = document.getElementById('headerAdType').value;
-            let media = document.getElementById('headerAdMedia').value;
-            let target = document.getElementById('headerAdTarget').value;
-
-            db.ref('ads/header').set({
-                type: type,
-                mediaUrl: media,
-                targetUrl: target
-            }, err => {
-                if(!err) {
-                    alert('Header Ad सफलतापूर्वक सुरक्षित हो गया!');
-                    renderAdPreview('headerPreview', media, type);
-                }
-            });
-        }
-
-        function saveMiddleAd() {
-            let type = document.getElementById('middleAdType').value;
-            let media = document.getElementById('middleAdMedia').value;
-            let target = document.getElementById('middleAdTarget').value;
-
-            db.ref('ads/middle').set({
-                type: type,
-                mediaUrl: media,
-                targetUrl: target
-            }, err => {
-                if(!err) {
-                    alert('Middle Ad सफलतापूर्वक सुरक्षित हो गया!');
-                    renderAdPreview('middlePreview', media, type);
-                }
-            });
-        }
-
-        function deleteAd(pos) {
-            if(confirm(`क्या आप सचमुच ${pos} Ad को हटाना चाहते हैं?`)) {
-                db.ref('ads/' + pos).remove(() => {
-                    alert('विज्ञापन हटा दिया गया है!');
-                    if(pos === 'header') {
-                        document.getElementById('headerAdMedia').value = '';
-                        document.getElementById('headerAdTarget').value = '';
-                        renderAdPreview('headerPreview', '', 'image');
-                    } else {
-                        document.getElementById('middleAdMedia').value = '';
-                        document.getElementById('middleAdTarget').value = '';
-                        renderAdPreview('middlePreview', '', 'image');
-                    }
-                });
-            }
-        }
-
-        function loadAds() {
-            db.ref('ads').once('value', snap => {
-                const ads = snap.val() || {};
-                if(ads.header) {
-                    document.getElementById('headerAdType').value = ads.header.type || 'image';
-                    document.getElementById('headerAdMedia').value = ads.header.mediaUrl || '';
-                    document.getElementById('headerAdTarget').value = ads.header.targetUrl || '';
-                    renderAdPreview('headerPreview', ads.header.mediaUrl, ads.header.type);
-                }
-                if(ads.middle) {
-                    document.getElementById('middleAdType').value = ads.middle.type || 'image';
-                    document.getElementById('middleAdMedia').value = ads.middle.mediaUrl || '';
-                    document.getElementById('middleAdTarget').value = ads.middle.targetUrl || '';
-                    renderAdPreview('middlePreview', ads.middle.mediaUrl, ads.middle.type);
-                }
-            });
-        }
-
-        /* 5. Breaking News System */
+        /* 4. Breaking News */
         function addBreakingNews() {
-            let text = document.getElementById('breakingText').value;
-            if(!text) return alert('कृपया टेक्स्ट दर्ज करें');
-
-            db.ref('breakingNews').push({ text: text }, () => {
+            let text = document.getElementById('breakingText').value.trim();
+            if(!text) return alert('कृपया ब्रेकिंग न्यूज़ टेक्स्ट भरें!');
+            db.ref('breakingNews').push({ text, timestamp: Date.now() }, () => {
                 document.getElementById('breakingText').value = '';
                 alert('ब्रेकिंग न्यूज़ जुड़ गई!');
             });
@@ -766,139 +730,183 @@
 
         function loadBreakingNews() {
             db.ref('breakingNews').on('value', snap => {
-                const data = snap.val() || {};
-                const table = document.getElementById('breakingTable');
+                let data = snap.val() || {};
+                let table = document.getElementById('breakingTable');
                 table.innerHTML = '';
                 for(let k in data) {
                     table.innerHTML += `
                         <tr>
                             <td>${data[k].text}</td>
-                            <td><button class="btn btn-danger btn-sm" onclick="db.ref('breakingNews/${k}').remove()"><i class="fa-solid fa-trash"></i> हटाएं</button></td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteBreaking('${k}')"><i class="fa-solid fa-trash"></i> Delete</button></td>
                         </tr>
                     `;
                 }
             });
         }
 
-        /* 6. E-Newspaper Table */
+        function deleteBreaking(id) {
+            db.ref('breakingNews/' + id).remove();
+        }
+
+        /* 5. E-Paper Control */
         function loadEpaperTable(data) {
-            const epTable = document.getElementById('epaperTable');
-            epTable.innerHTML = '';
+            let table = document.getElementById('epaperTable');
+            table.innerHTML = '';
             for(let k in data) {
                 let item = data[k];
-                let pDate = item.createdAt ? new Date(item.createdAt).toLocaleDateString('hi-IN') : '-';
-                epTable.innerHTML += `
-                    <tr>
-                        <td><strong>${item.title}</strong></td>
-                        <td>${pDate}</td>
-                        <td>
-                            <button class="btn btn-warning btn-sm" onclick="openEditModal('${k}')"><i class="fa-solid fa-pen"></i> Edit</button>
-                            <button class="btn btn-danger btn-sm" onclick="deleteNews('${k}')"><i class="fa-solid fa-trash"></i> Delete</button>
-                        </td>
-                    </tr>
-                `;
+                if(item.category && item.category.toLowerCase().includes('e-paper')) {
+                    table.innerHTML += `
+                        <tr>
+                            <td><strong>${item.title}</strong></td>
+                            <td>${item.date || '-'}</td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteNews('${k}')"><i class="fa-solid fa-trash"></i> Delete</button></td>
+                        </tr>
+                    `;
+                }
             }
         }
 
-        /* 7. Reporters Management (NAME FIX) */
+        /* 6. Reporters & Sub-Admins */
         function createReporter() {
-            let name = document.getElementById('repName').value;
-            let username = document.getElementById('repUsername').value;
-            let password = document.getElementById('repPassword').value;
+            let name = document.getElementById('repName').value.trim();
+            let username = document.getElementById('repUsername').value.trim();
+            let password = document.getElementById('repPassword').value.trim();
             let district = document.getElementById('repDistrict').value;
 
-            if(!name || !username || !password) return alert('कृपया सभी फ़ील्ड भरें');
+            if(!name || !username || !password) return alert('सभी फ़ील्ड भरना अनिवार्य है!');
 
-            db.ref('reporters/' + username).set({
-                fullName: name,
-                username: username,
-                password: password,
-                district: district
-            }, err => {
-                if(!err) {
-                    alert('रिपोर्टर खाता बन गया!');
-                    document.getElementById('repName').value = '';
-                    document.getElementById('repUsername').value = '';
-                    document.getElementById('repPassword').value = '';
-                }
+            db.ref('reporters/' + username).set({ name, username, password, district }, () => {
+                alert('रिपोर्टर / सब-एडमिन अकाउंट सफलतापूर्वक बन गया!');
+                document.getElementById('repName').value = '';
+                document.getElementById('repUsername').value = '';
+                document.getElementById('repPassword').value = '';
             });
         }
 
         function loadReporters() {
             db.ref('reporters').on('value', snap => {
-                const data = snap.val() || {};
-                const table = document.getElementById('reportersTable');
-                const filterDropdown = document.getElementById('filterReporter');
+                let data = snap.val() || {};
+                let table = document.getElementById('reportersTable');
+                let selectRep = document.getElementById('filterReporter');
                 table.innerHTML = '';
-                filterDropdown.innerHTML = '<option value="ALL">सभी रिपोर्टर (All Reporters)</option>';
+                selectRep.innerHTML = `<option value="ALL">सभी रिपोर्टर (All Reporters)</option>`;
 
                 for(let k in data) {
                     let r = data[k];
-                    let displayName = r.fullName || r.name || r.username;
                     table.innerHTML += `
                         <tr>
-                            <td><strong>${displayName}</strong></td>
+                            <td><strong>${r.name}</strong></td>
                             <td>${r.username}</td>
-                            <td>${r.district || '-'}</td>
+                            <td>${r.district}</td>
                             <td>${r.password}</td>
-                            <td><button class="btn btn-danger btn-sm" onclick="db.ref('reporters/${k}').remove()"><i class="fa-solid fa-trash"></i> Delete Account</button></td>
+                            <td><button class="btn btn-danger btn-sm" onclick="deleteReporter('${k}')"><i class="fa-solid fa-trash"></i> Delete</button></td>
                         </tr>
                     `;
-                    filterDropdown.innerHTML += `<option value="${displayName}">${displayName}</option>`;
+                    selectRep.innerHTML += `<option value="${r.username}">${r.name} (${r.district})</option>`;
                 }
             });
         }
 
-        /* 8. Logo & Site Settings */
-        function handleLogoUpload(input) {
-            if (input.files && input.files[0]) {
+        function deleteReporter(username) {
+            if(confirm('क्या आप इस रिपोर्टर अकाउंट को डिलीट करना चाहते हैं?')) {
+                db.ref('reporters/' + username).remove();
+            }
+        }
+
+        /* 7. Settings & Ads */
+        function handleAdFileUpload(input, targetInputId, previewBoxId) {
+            if(input.files && input.files[0]) {
                 let reader = new FileReader();
                 reader.onload = function(e) {
-                    document.getElementById('settingLogo').value = e.target.result;
-                    document.getElementById('logoPreviewBox').innerHTML = `<img src="${e.target.result}" style="max-height: 70px;">`;
+                    document.getElementById(targetInputId).value = e.target.result;
+                    let pBox = document.getElementById(previewBoxId);
+                    pBox.innerHTML = `<img src="${e.target.result}" style="max-height:160px;" alt="अपलोड किया गया विज्ञापन पूर्वावलोकन, समाचार पोर्टल के विज्ञापन क्षेत्र के लिए">`;
                 }
                 reader.readAsDataURL(input.files[0]);
             }
         }
 
+        function handleLogoUpload(input) {
+            if(input.files && input.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('settingLogo').value = e.target.result;
+                    document.getElementById('logoPreviewBox').innerHTML = `<img src="${e.target.result}" style="max-height:70px;" alt="अपलोड किया गया वेबसाइट लोगो, पोर्टल ब्रांडिंग के संदर्भ में">`;
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveHeaderAd() {
+            let type = document.getElementById('headerAdType').value;
+            let media = document.getElementById('headerAdMedia').value;
+            let target = document.getElementById('headerAdTarget').value;
+            db.ref('siteSettings/headerAd').set({ type, media, target }, () => alert('Header Ad सुरक्षित हो गया!'));
+        }
+
+        function saveMiddleAd() {
+            let type = document.getElementById('middleAdType').value;
+            let media = document.getElementById('middleAdMedia').value;
+            let target = document.getElementById('middleAdTarget').value;
+            db.ref('siteSettings/middleAd').set({ type, media, target }, () => alert('Middle Ad सुरक्षित हो गया!'));
+        }
+
+        function deleteAd(pos) {
+            db.ref('siteSettings/' + pos + 'Ad').remove(() => alert('Ad हटा दिया गया!'));
+        }
+
         function saveBrandingSettings() {
             let tagline = document.getElementById('settingTagline').value;
-            let logoUrl = document.getElementById('settingLogo').value;
-
-            db.ref('siteSettings/branding').set({
-                logoUrl: logoUrl
-            });
-            db.ref('siteSettings/tagline').set(tagline, err => {
-                if(!err) alert('ब्रांडिंग एवं टैगलाइन सफलतापूर्वक सुरक्षित हो गईं!');
-            });
+            let logo = document.getElementById('settingLogo').value;
+            db.ref('siteSettings/branding').update({ tagline, logo }, () => alert('ब्रांडिंग सेटिंग्स सुरक्षित हो गईं!'));
         }
 
         function saveSocialSettings() {
-            db.ref('siteSettings/social').set({
-                facebook: document.getElementById('socialFb').value,
-                youtube: document.getElementById('socialYt').value,
-                whatsapp: document.getElementById('socialWa').value,
-                twitter: document.getElementById('socialTw').value,
-                instagram: document.getElementById('socialInsta').value
-            }, err => {
-                if(!err) alert('सोशल मीडिया लिंक्स सफलतापूर्वक सुरक्षित हो गए!');
-            });
+            let facebook = document.getElementById('socialFb').value;
+            let youtube = document.getElementById('socialYt').value;
+            let whatsapp = document.getElementById('socialWa').value;
+            let twitter = document.getElementById('socialTw').value;
+            let instagram = document.getElementById('socialInsta').value;
+            db.ref('siteSettings/social').set({ facebook, youtube, whatsapp, twitter, instagram }, () => alert('सोशल लिंक्स सुरक्षित हो गए!'));
         }
 
         function loadSettings() {
-            db.ref('siteSettings').once('value', snap => {
-                const data = snap.val() || {};
-                if(data.tagline) document.getElementById('settingTagline').value = data.tagline;
-                if(data.branding && data.branding.logoUrl) {
-                    document.getElementById('settingLogo').value = data.branding.logoUrl;
-                    document.getElementById('logoPreviewBox').innerHTML = `<img src="${data.branding.logoUrl}" style="max-height: 70px;">`;
+            db.ref('siteSettings').on('value', snap => {
+                let s = snap.val() || {};
+                if(s.branding) {
+                    document.getElementById('settingTagline').value = s.branding.tagline || '';
+                    document.getElementById('settingLogo').value = s.branding.logo || '';
+                    if(s.branding.logo) {
+                        document.getElementById('logoPreviewBox').innerHTML = `<img src="${s.branding.logo}" style="max-height:70px;" alt="वेबसाइट का सक्रिय लोगो, पोर्टल पहचान के संदर्भ में">`;
+                    }
                 }
-                if(data.social) {
-                    document.getElementById('socialFb').value = data.social.facebook || '';
-                    document.getElementById('socialYt').value = data.social.youtube || '';
-                    document.getElementById('socialWa').value = data.social.whatsapp || '';
-                    document.getElementById('socialTw').value = data.social.twitter || '';
-                    document.getElementById('socialInsta').value = data.social.instagram || '';
+                if(s.social) {
+                    document.getElementById('socialFb').value = s.social.facebook || '';
+                    document.getElementById('socialYt').value = s.social.youtube || '';
+                    document.getElementById('socialWa').value = s.social.whatsapp || '';
+                    document.getElementById('socialTw').value = s.social.twitter || '';
+                    document.getElementById('socialInsta').value = s.social.instagram || '';
+                }
+            });
+        }
+
+        function loadAds() {
+            db.ref('siteSettings/headerAd').on('value', snap => {
+                let d = snap.val();
+                if(d) {
+                    document.getElementById('headerAdType').value = d.type || 'image';
+                    document.getElementById('headerAdMedia').value = d.media || '';
+                    document.getElementById('headerAdTarget').value = d.target || '';
+                    document.getElementById('headerPreview').innerHTML = `<img src="${d.media}" style="max-height:160px;" alt="हेडर विज्ञापन पूर्वावलोकन, वेबसाइट शीर्ष बैनर के संदर्भ में">`;
+                }
+            });
+            db.ref('siteSettings/middleAd').on('value', snap => {
+                let d = snap.val();
+                if(d) {
+                    document.getElementById('middleAdType').value = d.type || 'image';
+                    document.getElementById('middleAdMedia').value = d.media || '';
+                    document.getElementById('middleAdTarget').value = d.target || '';
+                    document.getElementById('middlePreview').innerHTML = `<img src="${d.media}" style="max-height:160px;" alt="मध्य फीड विज्ञापन पूर्वावलोकन, समाचार सूची के संदर्भ में">`;
                 }
             });
         }
