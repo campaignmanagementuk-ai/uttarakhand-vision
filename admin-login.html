@@ -911,5 +911,19 @@
             });
         }
     </script>
+    <script>
+        (function() {
+            if (localStorage.getItem('adminLoggedIn') !== 'true') {
+                let u = prompt("कृपया एडमिन यूजरनेम दर्ज करें:");
+                let p = prompt("कृपया एडमिन पासवर्ड दर्ज करें:");
+                if (u === "admin" && p === "12345") {
+                    localStorage.setItem('adminLoggedIn', 'true');
+                } else {
+                    alert("गलत आईडी या पासवर्ड! एक्सेस denied.");
+                    document.body.innerHTML = "<h2 style='text-align:center; margin-top:20vh; color:red;'>Access Denied. Please refresh and try again.</h2>";
+                }
+            }
+        })();
+    </script>
 </body>
 </html>
