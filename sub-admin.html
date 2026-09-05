@@ -4,706 +4,601 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reporter Portal - News Submission Dashboard</title>
-
-    <!-- Firebase SDKs (v8) -->
+    <!-- Tailwind CSS for modern responsive UI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase App (v8) & Realtime Database -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
     <style>
         :root {
-            --bg-main: #f8fafc;
             --sidebar-bg: #1e293b;
-            --sidebar-hover: #334155;
-            --card-bg: #ffffff;
-            --text-dark: #0f172a;
-            --text-muted: #64748b;
-            --accent-blue: #2563eb;
-            --accent-green: #16a34a;
-            --accent-red: #dc2626;
-            --accent-yellow: #d97706;
-            --border-color: #e2e8f0;
-            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --accent-blue: #3b82f6;
         }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
         body {
-            background-color: var(--bg-main);
-            color: var(--text-dark);
-            min-height: 100vh;
-        }
-
-        /* --- Login Screen Styling --- */
-        #login-screen {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-            padding: 20px;
-        }
-
-        .login-card {
-            background: #ffffff;
-            width: 100%;
-            max-width: 400px;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-
-        .login-card h2 {
-            margin-bottom: 8px;
-            color: var(--text-dark);
-        }
-
-        .login-card p {
-            color: var(--text-muted);
-            font-size: 0.9rem;
-            margin-bottom: 25px;
-        }
-
-        /* --- Dashboard Layout --- */
-        .app-container {
-            display: flex;
-            min-height: 100vh;
-        }
-
-        .sidebar {
-            width: 260px;
-            background-color: var(--sidebar-bg);
-            color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 1000;
-        }
-
-        .sidebar-header {
-            padding: 20px;
-            border-bottom: 1px solid var(--sidebar-hover);
-        }
-
-        .sidebar-menu {
-            list-style: none;
-            padding: 15px 10px;
-            flex-grow: 1;
-        }
-
-        .menu-link {
-            display: flex;
-            align-items: center;
-            padding: 12px 15px;
-            color: #94a3b8;
-            text-decoration: none;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            cursor: pointer;
-            transition: all 0.2s;
-            margin-bottom: 5px;
-        }
-
-        .menu-link:hover, .menu-link.active {
-            background-color: var(--sidebar-hover);
-            color: #ffffff;
-        }
-
-        .main-wrapper {
-            margin-left: 260px;
-            width: calc(100% - 260px);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .top-navbar {
-            background-color: #ffffff;
-            height: 65px;
-            padding: 0 30px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-            position: sticky;
-            top: 0;
-            z-index: 900;
-        }
-
-        .user-badge {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .user-avatar {
-            width: 36px;
-            height: 36px;
-            background-color: var(--accent-blue);
-            color: #fff;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-
-        .container {
-            padding: 30px;
-            flex-grow: 1;
-        }
-
-        /* --- Cards & Forms --- */
-        .card {
-            background-color: var(--card-bg);
-            border-radius: 10px;
-            padding: 25px;
-            box-shadow: var(--shadow-sm);
-            margin-bottom: 25px;
-        }
-
-        .form-group {
-            margin-bottom: 18px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-dark);
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 0.95rem;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-control:focus {
-            border-color: var(--accent-blue);
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 120px;
-        }
-
-        .media-selector-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .media-tab-btn {
-            padding: 8px 14px;
-            border: 1px solid var(--border-color);
-            background: #f1f5f9;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 0.85rem;
-            font-weight: 600;
-        }
-
-        .media-tab-btn.active {
-            background: var(--accent-blue);
-            color: #ffffff;
-            border-color: var(--accent-blue);
-        }
-
-        .btn {
-            padding: 10px 18px;
-            border: none;
-            border-radius: 6px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: opacity 0.2s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-
-        .btn:hover { opacity: 0.9; }
-        .btn-primary { background-color: var(--accent-blue); color: #fff; }
-        .btn-danger { background-color: var(--accent-red); color: #fff; }
-        .btn-secondary { background-color: #64748b; color: #fff; }
-
-        /* --- Table Styling --- */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-        }
-
-        th {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f8fafc;
-            color: var(--text-muted);
-            padding: 12px 15px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-            font-size: 0.9rem;
-            vertical-align: middle;
-        }
-
-        .status-pill {
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.75rem;
-            font-weight: 700;
-            text-transform: uppercase;
-        }
-        .pill-pending { background-color: #fef3c7; color: #d97706; }
-        .pill-approved { background-color: #dcfce7; color: #15803d; }
-        .pill-rejected { background-color: #fee2e2; color: #b91c1c; }
-
-        .preview-img, .preview-video {
-            max-width: 250px;
-            max-height: 150px;
-            margin-top: 10px;
-            border-radius: 6px;
-            display: none;
-            object-fit: cover;
-        }
-
-        .hidden { display: none !important; }
-
-        @media (max-width: 768px) {
-            .sidebar { transform: translateX(-100%); }
-            .main-wrapper { margin-left: 0; width: 100%; }
         }
     </style>
 </head>
-<body>
+<body class="bg-slate-50 text-slate-800 antialiased">
 
-    <!-- 1. LOGIN SCREEN -->
-    <div id="login-screen">
-        <div class="login-card">
-            <h2>Reporter Login</h2>
-            <p>Sub-Admin Portal Access</p>
-            <form id="login-form">
-                <div class="form-group">
-                    <input type="text" class="form-control" id="login-username" placeholder="Username" required>
+    <!-- ==================== LOGIN SECTION ==================== -->
+    <div id="loginSection" class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-slate-900 via-slate-800 to-indigo-950">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden border border-slate-100">
+            <div class="bg-indigo-600 p-6 text-center text-white">
+                <div class="inline-flex p-3 bg-white/10 rounded-full mb-3 backdrop-blur-sm">
+                    <i class="fa-solid fa-id-badge text-3xl"></i>
                 </div>
-                <div class="form-group">
-                    <input type="password" class="form-control" id="login-password" placeholder="Password" required>
+                <h1 class="text-2xl font-bold tracking-wide">Reporter Portal</h1>
+                <p class="text-indigo-200 text-sm mt-1">डैशबोर्ड में लॉगिन करें</p>
+            </div>
+            
+            <form id="loginForm" class="p-8 space-y-5" onsubmit="handleLogin(event)">
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">यूजरनेम / ईमेल</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+                        <input type="text" id="loginUsername" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition" placeholder="अपना यूजरनेम दर्ज करें">
+                    </div>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">🔑 Log In</button>
+
+                <div>
+                    <label class="block text-xs font-semibold uppercase text-slate-500 mb-1">पासवर्ड</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400">
+                            <i class="fa-solid fa-lock"></i>
+                        </span>
+                        <input type="password" id="loginPassword" required class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm transition" placeholder="••••••••">
+                    </div>
+                </div>
+
+                <div id="loginError" class="hidden p-3 bg-rose-50 border border-rose-200 text-rose-600 text-xs rounded-lg flex items-center space-x-2">
+                    <i class="fa-solid fa-circle-exclamation text-sm"></i>
+                    <span id="loginErrorText">गलत यूजरनेम या पासवर्ड!</span>
+                </div>
+
+                <button type="submit" id="loginBtn" class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow-lg shadow-indigo-200 transition duration-200 flex items-center justify-center space-x-2">
+                    <span>लॉगिन करें</span>
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i>
+                </button>
             </form>
         </div>
     </div>
 
-    <!-- 2. MAIN REPORTER DASHBOARD -->
-    <div id="dashboard-screen" class="app-container hidden">
-        <!-- Sidebar Navigation -->
-        <aside class="sidebar">
-            <div class="sidebar-header">
-                <h3>Reporter Panel</h3>
+    <!-- ==================== MAIN DASHBOARD SECTION ==================== -->
+    <div id="dashboardSection" class="hidden min-h-screen flex flex-col md:flex-row">
+        
+        <!-- Sidebar -->
+        <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between shadow-xl z-20">
+            <div>
+                <div class="p-6 border-b border-slate-800 flex items-center space-x-3">
+                    <div class="bg-indigo-600 text-white p-2 rounded-lg">
+                        <i class="fa-solid fa-newspaper text-lg"></i>
+                    </div>
+                    <div>
+                        <h2 class="font-bold text-white text-base">Reporter Desk</h2>
+                        <span class="text-xs text-indigo-400 font-medium" id="reporterBadgeRole">Sub-Admin</span>
+                    </div>
+                </div>
+
+                <nav class="p-4 space-y-1.5">
+                    <button onclick="switchTab('submitNews')" id="nav-submitNews" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition bg-indigo-600 text-white">
+                        <i class="fa-solid fa-pen-to-square w-5"></i>
+                        <span>खबर लिखें (Submit)</span>
+                    </button>
+                    <button onclick="switchTab('historyNews')" id="nav-historyNews" class="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:bg-slate-800 text-slate-300">
+                        <i class="fa-solid fa-clock-rotate-left w-5"></i>
+                        <span>मेरी खबरें (History)</span>
+                    </button>
+                </nav>
             </div>
-            <ul class="sidebar-menu">
-                <li>
-                    <a class="menu-link active" id="nav-add" onclick="switchTab('add')">
-                        📝 Submit New Article
-                    </a>
-                </li>
-                <li>
-                    <a class="menu-link" id="nav-history" onclick="switchTab('history')">
-                        📋 My Submissions
-                    </a>
-                </li>
-            </ul>
-            <div style="padding: 20px;">
-                <button class="btn btn-danger" style="width: 100%;" onclick="logout()">🚪 Logout</button>
+
+            <div class="p-4 border-t border-slate-800">
+                <div class="flex items-center justify-between mb-3 px-2">
+                    <div class="truncate">
+                        <p class="text-xs text-slate-400">लॉगिन यूजर:</p>
+                        <p class="text-sm font-bold text-white truncate" id="currentReporterName">Reporter</p>
+                    </div>
+                </div>
+                <button onclick="handleLogout()" class="w-full py-2 px-3 bg-rose-600/10 hover:bg-rose-600 text-rose-400 hover:text-white rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-2 border border-rose-500/20">
+                    <i class="fa-solid fa-power-off"></i>
+                    <span>लॉग आउट</span>
+                </button>
             </div>
         </aside>
 
         <!-- Main Content Area -->
-        <div class="main-wrapper">
-            <header class="top-navbar">
-                <div style="font-weight: 600;" id="page-title">Submit News Article</div>
-                <div class="user-badge">
-                    <div class="user-avatar" id="user-avatar-char">R</div>
-                    <div>
-                        <div style="font-size: 0.85rem; font-weight: bold;" id="display-fullname">Reporter Name</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);" id="display-district">District</div>
-                    </div>
+        <main class="flex-1 p-4 md:p-8 overflow-y-auto">
+            
+            <!-- Top Bar -->
+            <header class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                <div>
+                    <h2 id="pageTitle" class="text-xl md:text-2xl font-bold text-slate-800">नया समाचार सबमिट करें</h2>
+                    <p class="text-xs md:text-sm text-slate-500" id="pageSubtitle">खबर ड्राफ्ट करें और सत्यापन के लिए सुपर एडमिन को भेजें।</p>
+                </div>
+                <div class="flex items-center space-x-3">
+                    <span id="connectionStatus" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                        <span class="w-1.5 h-1.5 mr-1.5 bg-amber-500 rounded-full animate-pulse"></span> कनेक्ट हो रहा है...
+                    </span>
                 </div>
             </header>
 
-            <main class="container">
-                
-                <!-- TAB 1: ADD NEWS FORM -->
-                <section id="tab-add">
-                    <div class="card">
-                        <h3 style="margin-bottom: 20px;">Draft & Submit News for Super Admin Review</h3>
-                        <form id="news-form">
-                            <div class="form-group">
-                                <label>News Title (शीर्षक)</label>
-                                <input type="text" class="form-control" id="news-title" required placeholder="Enter compelling title...">
-                            </div>
+            <!-- TAB 1: SUBMIT NEWS FORM -->
+            <section id="tab-submitNews" class="space-y-6 max-w-4xl">
+                <form id="newsForm" onsubmit="submitNewsData(event)" class="bg-white rounded-xl shadow-sm border border-slate-200 p-6 space-y-5">
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        <!-- Category -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">खबर की श्रेणी (Category) <span class="text-rose-500">*</span></label>
+                            <select id="newsCategory" required class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                                <option value="">श्रेणी चुनें</option>
+                                <option value="राजनीति">राजनीति (Politics)</option>
+                                <option value="अपराध">अपराध (Crime)</option>
+                                <option value="मनोरंजन">मनोरंजन (Entertainment)</option>
+                                <option value="खेल">खेल (Sports)</option>
+                                <option value="व्यापार">व्यापार (Business)</option>
+                                <option value="राज्य/ज़िला">राज्य / ज़िला (State/District)</option>
+                                <option value="अन्य">अन्य (Others)</option>
+                            </select>
+                        </div>
 
-                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
-                                <div class="form-group">
-                                    <label>Category (श्रेणी)</label>
-                                    <select class="form-control" id="news-category" required>
-                                        <option value="ताज़ा ख़बर">ताज़ा ख़बर (Breaking)</option>
-                                        <option value="राजनीति">राजनीति (Politics)</option>
-                                        <option value="क्राइम">क्राइम (Crime)</option>
-                                        <option value="खेल">खेल (Sports)</option>
-                                        <option value="मनोरंजन">मनोरंजन (Entertainment)</option>
-                                        <option value="राज्य/ज़िला">राज्य/ज़िला (State/District)</option>
-                                        <option value="व्यापार">व्यापार (Business)</option>
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label>District / Mandal</label>
-                                    <input type="text" class="form-control" id="news-district" readonly>
-                                </div>
-                            </div>
-
-                            <div class="form-group">
-                                <label>News Content (पूरी खबर)</label>
-                                <textarea class="form-control" id="news-content" required placeholder="Write detailed news content here..."></textarea>
-                            </div>
-
-                            <!-- MEDIA ATTACHMENT SECTION (IMAGE, VIDEO, YOUTUBE) -->
-                            <div class="form-group">
-                                <label>Attach Media (मीडिया संलग्न करें)</label>
-                                <div class="media-selector-tabs">
-                                    <button type="button" class="media-tab-btn active" id="tab-btn-image" onclick="selectMediaType('image')">📷 Photo</button>
-                                    <button type="button" class="media-tab-btn" id="tab-btn-video" onclick="selectMediaType('video')">🎥 Video File</button>
-                                    <button type="button" class="media-tab-btn" id="tab-btn-youtube" onclick="selectMediaType('youtube')">▶️ YouTube Link</button>
-                                </div>
-
-                                <!-- 1. Image Upload Box -->
-                                <div id="media-box-image">
-                                    <input type="file" class="form-control" id="news-image-file" accept="image/*" onchange="previewSelectedImage(event)">
-                                    <img id="image-preview" class="preview-img">
-                                </div>
-
-                                <!-- 2. Video Upload Box -->
-                                <div id="media-box-video" class="hidden">
-                                    <input type="file" class="form-control" id="news-video-file" accept="video/*" onchange="previewSelectedVideo(event)">
-                                    <video id="video-preview" class="preview-video" controls></video>
-                                    <small style="color: var(--text-muted); margin-top: 5px; display: block;">* Chhoti video files (Max 10-15MB) upload karein.</small>
-                                </div>
-
-                                <!-- 3. YouTube Link Box -->
-                                <div id="media-box-youtube" class="hidden">
-                                    <input type="url" class="form-control" id="news-youtube-url" placeholder="Paste YouTube Video URL (e.g. https://www.youtube.com/watch?v=...)">
-                                </div>
-                            </div>
-
-                            <button type="submit" class="btn btn-primary" id="btn-submit">🚀 Submit to Super Admin</button>
-                        </form>
-                    </div>
-                </section>
-
-                <!-- TAB 2: MY SUBMISSIONS HISTORY -->
-                <section id="tab-history" class="hidden">
-                    <div class="card">
-                        <h3 style="margin-bottom: 20px;">My Article Submissions & Status</h3>
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>Media Type</th>
-                                        <th>Title</th>
-                                        <th>Category</th>
-                                        <th>Submitted On</th>
-                                        <th>Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="my-history-tbody">
-                                    <tr><td colspan="5" style="text-align:center;">Loading history...</td></tr>
-                                </tbody>
-                            </table>
+                        <!-- Location -->
+                        <div>
+                            <label class="block text-xs font-bold uppercase text-slate-600 mb-1">स्थान (Location) <span class="text-rose-500">*</span></label>
+                            <input type="text" id="newsLocation" required placeholder="जैसे: लखनऊ, उत्तर प्रदेश" class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
                         </div>
                     </div>
-                </section>
 
-            </main>
-        </div>
+                    <!-- News Title -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">मुख्य शीर्षक (Headline) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="newsTitle" required placeholder="यहाँ आकर्षक शीर्षक लिखें..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                    </div>
+
+                    <!-- News Content / Description -->
+                    <div>
+                        <label class="block text-xs font-bold uppercase text-slate-600 mb-1">खबर का विस्तृत विवरण (Content) <span class="text-rose-500">*</span></label>
+                        <textarea id="newsContent" rows="6" required placeholder="यहाँ विस्तार से पूरी खबर लिखें..." class="w-full p-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"></textarea>
+                    </div>
+
+                    <!-- Media Attachments Card -->
+                    <div class="border border-dashed border-slate-300 rounded-xl p-4 bg-slate-50/50 space-y-4">
+                        <h3 class="text-xs font-bold uppercase text-slate-600"><i class="fa-solid fa-photo-film mr-1 text-indigo-600"></i> मीडिया अटैचमेंट्स (वैकल्पिक)</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <!-- Image Upload -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">तस्वीर (Image)</label>
+                                <input type="file" id="newsImage" accept="image/*" onchange="compressImage(this)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                                <input type="hidden" id="compressedImageBase64">
+                            </div>
+
+                            <!-- Video Upload -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">वीडियो फ़ाइल (Max 20MB)</label>
+                                <input type="file" id="newsVideo" accept="video/*" onchange="handleVideoUpload(this)" class="w-full text-xs text-slate-500 file:mr-2 file:py-1.5 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 cursor-pointer">
+                                <input type="hidden" id="videoDataUrl">
+                            </div>
+
+                            <!-- YouTube Link -->
+                            <div>
+                                <label class="block text-xs font-medium text-slate-500 mb-1">यूट्यूब वीडियो लिंक</label>
+                                <input type="url" id="newsYoutube" placeholder="https://youtu.be/..." class="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs focus:ring-1 focus:ring-indigo-500 focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div class="flex justify-end pt-2">
+                        <button type="submit" id="submitNewsBtn" class="px-6 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-lg shadow transition text-sm flex items-center space-x-2">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>सुपर एडमिन को भेजें</span>
+                        </button>
+                    </div>
+                </form>
+            </section>
+
+            <!-- TAB 2: HISTORY SECTION -->
+            <section id="tab-historyNews" class="hidden space-y-6">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                        <h3 class="font-bold text-slate-700 text-sm">मेरी भेजी गई खबरें और उनकी स्थिति (Status)</h3>
+                        <button onclick="loadReporterHistory()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center space-x-1">
+                            <i class="fa-solid fa-rotate"></i> <span>रिफ्रेश करें</span>
+                        </button>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-slate-100/70 text-slate-600 text-xs uppercase font-semibold border-b border-slate-200">
+                                    <th class="p-3">शीर्षक & श्रेणी</th>
+                                    <th class="p-3">स्थान</th>
+                                    <th class="p-3">दिनांक</th>
+                                    <th class="p-3 text-center">स्थिति (Status)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyTableBody" class="divide-y divide-slate-200 text-sm text-slate-700">
+                                <tr>
+                                    <td colspan="4" class="p-6 text-center text-slate-400">डेटा लोड हो रहा है...</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </main>
     </div>
 
-    <!-- Firebase Script Logic -->
+    <!-- Toast Notification Popup -->
+    <div id="toastNotification" class="fixed bottom-5 right-5 hidden z-50 flex items-center space-x-3 bg-slate-900 text-white px-4 py-3 rounded-xl shadow-2xl border border-slate-700 text-sm transition-all transform translate-y-2">
+        <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+        <span id="toastMessage">सफलतापूर्वक पूर्ण हुआ!</span>
+    </div>
+
+    <!-- ==================== FIREBASE & APP SCRIPT ==================== -->
     <script>
-        // --- 1. FIREBASE INITIALIZATION ---
-        // Apni Firebase Config Details Yahan Daalein
+        // ----------------------------------------------------
+        // FIREBASE CONFIGURATION (अपनी फ़ायरबेस डिटेल्स यहाँ डालें)
+        // ----------------------------------------------------
         const firebaseConfig = {
-            apiKey: "AIzaSyDWxB-KOkWNn2Z4sRUtLQuTxy-ZUCNxK1s",
-            authDomain: "uttarakhand-vision.firebaseapp.com",
-            databaseURL: "https://uttarakhand-vision-default-rtdb.firebaseio.com",
-            projectId: "uttarakhand-vision",
-            storageBucket: "uttarakhand-vision.firebasestorage.app",
-            messagingSenderId: "72349034061",
-            appId: "1:72349034061:web:2a9cfce56aaf04d5ef1e04"
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            databaseURL: "https://YOUR_PROJECT_ID-default-rtdb.firebaseio.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "SENDER_ID",
+            appId: "APP_ID"
         };
 
-        firebase.initializeApp(firebaseConfig);
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        } else {
+            firebase.app();
+        }
+
         const db = firebase.database();
 
-        // Active Session State
-        let currentReporter = null;
-        let selectedMediaType = "image"; // Default: image
-        let base64MediaData = "";
-
-        // --- 2. AUTHENTICATION (LOGIN / LOGOUT) ---
-        document.getElementById('login-form').addEventListener('submit', (e) => {
-            e.preventDefault();
-            const userVal = document.getElementById('login-username').value.trim();
-            const passVal = document.getElementById('login-password').value.trim();
-
-            db.ref(`subadmins/${userVal}`).once('value').then(snap => {
-                const rep = snap.val();
-                if (rep && rep.password === passVal) {
-                    currentReporter = rep;
-                    localStorage.setItem('reporter_session', JSON.stringify(rep));
-                    initDashboard();
-                } else {
-                    alert('गलत Username या Password! कृपया Super Admin से संपर्क करें।');
-                }
-            }).catch(err => alert('Login Error: ' + err.message));
+        // Check Connection Status
+        db.ref(".info/connected").on("value", function(snap) {
+            const statusEl = document.getElementById("connectionStatus");
+            if (snap.val() === true) {
+                statusEl.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800";
+                statusEl.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 bg-emerald-500 rounded-full"></span> कनेक्टेड';
+            } else {
+                statusEl.className = "inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-rose-100 text-rose-800";
+                statusEl.innerHTML = '<span class="w-1.5 h-1.5 mr-1.5 bg-rose-500 rounded-full animate-pulse"></span> डिस्कनेक्टेड';
+            }
         });
 
-        function checkSession() {
-            const saved = localStorage.getItem('reporter_session');
-            if (saved) {
-                currentReporter = JSON.parse(saved);
-                initDashboard();
+        // Current Logged-in Reporter Info
+        let currentReporter = JSON.parse(localStorage.getItem("reporterSession")) || null;
+
+        window.addEventListener("DOMContentLoaded", () => {
+            if (currentReporter) {
+                showDashboard();
+            } else {
+                showLogin();
+            }
+        });
+
+        // ----------------------------------------------------
+        // LOGIN HANDLING
+        // ----------------------------------------------------
+        function handleLogin(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById("loginUsername").value.trim();
+            const passwordInput = document.getElementById("loginPassword").value.trim();
+            const errorBox = document.getElementById("loginError");
+            const errorText = document.getElementById("loginErrorText");
+            const loginBtn = document.getElementById("loginBtn");
+
+            errorBox.classList.add("hidden");
+            loginBtn.disabled = true;
+            loginBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>लॉगिन हो रहा है...</span>';
+
+            db.ref("subadmins").once("value")
+                .then((snapshot) => {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<span>लॉगिन करें</span><i class="fa-solid fa-arrow-right-to-bracket"></i>';
+
+                    if (!snapshot.exists()) {
+                        errorText.innerText = "सिस्टम में कोई सब-एडमिन/रिपोर्टर रजिस्टर्ड नहीं है!";
+                        errorBox.classList.remove("hidden");
+                        return;
+                    }
+
+                    let foundUser = null;
+                    snapshot.forEach((childSnap) => {
+                        const data = childSnap.val();
+                        if ((data.username === usernameInput || data.email === usernameInput) && data.password === passwordInput) {
+                            foundUser = {
+                                id: childSnap.key,
+                                name: data.name || data.username || "Reporter",
+                                username: data.username || usernameInput,
+                                role: data.role || "Sub-Admin"
+                            };
+                        }
+                    });
+
+                    if (foundUser) {
+                        localStorage.setItem("reporterSession", JSON.stringify(foundUser));
+                        currentReporter = foundUser;
+                        showDashboard();
+                        showToast("सफलतापूर्वक लॉगिन हो गए!", "success");
+                    } else {
+                        errorText.innerText = "गलत यूजरनेम या पासवर्ड! कृपया जांच लें।";
+                        errorBox.classList.remove("hidden");
+                    }
+                })
+                .catch((error) => {
+                    loginBtn.disabled = false;
+                    loginBtn.innerHTML = '<span>लॉगिन करें</span><i class="fa-solid fa-arrow-right-to-bracket"></i>';
+                    errorText.innerText = "नेटवर्क एरर: " + error.message;
+                    errorBox.classList.remove("hidden");
+                });
+        }
+
+        function handleLogout() {
+            localStorage.removeItem("reporterSession");
+            currentReporter = null;
+            document.getElementById("loginForm").reset();
+            showLogin();
+            showToast("सफलतापूर्वक लॉग आउट हो गए।", "info");
+        }
+
+        function showLogin() {
+            document.getElementById("loginSection").classList.remove("hidden");
+            document.getElementById("dashboardSection").classList.add("hidden");
+        }
+
+        function showDashboard() {
+            document.getElementById("loginSection").classList.add("hidden");
+            document.getElementById("dashboardSection").classList.remove("hidden");
+            if (currentReporter) {
+                document.getElementById("currentReporterName").innerText = currentReporter.name;
+                document.getElementById("reporterBadgeRole").innerText = currentReporter.role;
+            }
+            switchTab('submitNews');
+        }
+
+        // ----------------------------------------------------
+        // NAVIGATION TABS
+        // ----------------------------------------------------
+        function switchTab(tabName) {
+            document.getElementById("tab-submitNews").classList.add("hidden");
+            document.getElementById("tab-historyNews").classList.add("hidden");
+
+            document.getElementById("nav-submitNews").className = "w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:bg-slate-800 text-slate-300";
+            document.getElementById("nav-historyNews").className = "w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:bg-slate-800 text-slate-300";
+
+            document.getElementById(`tab-${tabName}`).classList.remove("hidden");
+            document.getElementById(`nav-${tabName}`).className = "w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-sm font-medium transition bg-indigo-600 text-white";
+
+            if (tabName === 'submitNews') {
+                document.getElementById("pageTitle").innerText = "नया समाचार सबमिट करें";
+                document.getElementById("pageSubtitle").innerText = "खबर ड्राफ्ट करें और सत्यापन के लिए सुपर एडमिन को भेजें।";
+            } else if (tabName === 'historyNews') {
+                document.getElementById("pageTitle").innerText = "मेरी भेजी गई खबरें";
+                document.getElementById("pageSubtitle").innerText = "आपके द्वारा सबमिट की गई सभी खबरों की लाइव स्टेटस देखें।";
+                loadReporterHistory();
             }
         }
 
-        function logout() {
-            localStorage.removeItem('reporter_session');
-            location.reload();
+        // ----------------------------------------------------
+        // MEDIA COMPRESSION & UPLOAD UTILS
+        // ----------------------------------------------------
+        function compressImage(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const img = new Image();
+                    img.src = e.target.result;
+                    img.onload = function () {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const maxDim = 800;
+
+                        if (width > height && width > maxDim) {
+                            height = Math.round((height * maxDim) / width);
+                            width = maxDim;
+                        } else if (height > maxDim) {
+                            width = Math.round((width * maxDim) / height);
+                            height = maxDim;
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+                        
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.7);
+                        document.getElementById("compressedImageBase64").value = dataUrl;
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
         }
 
-        function initDashboard() {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('dashboard-screen').classList.remove('hidden');
-
-            document.getElementById('display-fullname').innerText = currentReporter.fullname || currentReporter.username;
-            document.getElementById('display-district').innerText = currentReporter.district || 'Reporter';
-            document.getElementById('user-avatar-char').innerText = (currentReporter.fullname || currentReporter.username).charAt(0).toUpperCase();
-            document.getElementById('news-district').value = currentReporter.district || '';
-
-            loadMyHistory();
+        function handleVideoUpload(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                if (file.size > 20 * 1024 * 1024) {
+                    alert("वीडियो का साइज़ 20MB से अधिक नहीं होना चाहिए!");
+                    input.value = "";
+                    document.getElementById("videoDataUrl").value = "";
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById("videoDataUrl").value = e.target.result;
+                }
+                reader.readAsDataURL(file);
+            }
         }
 
-        // --- 3. NAVIGATION SWITCHER ---
-        function switchTab(tabId) {
-            document.getElementById('tab-add').classList.add('hidden');
-            document.getElementById('tab-history').classList.add('hidden');
-            document.getElementById('nav-add').classList.remove('active');
-            document.getElementById('nav-history').classList.remove('active');
-
-            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
-            document.getElementById(`nav-${tabId}`).classList.add('active');
-
-            document.getElementById('page-title').innerText = tabId === 'add' ? 'Submit News Article' : 'My Submissions';
-        }
-
-        // --- 4. MEDIA TYPE TAB SWITCHER ---
-        function selectMediaType(type) {
-            selectedMediaType = type;
-            base64MediaData = ""; // Reset media buffer
-
-            // Update Tab UI
-            ['image', 'video', 'youtube'].forEach(t => {
-                document.getElementById(`tab-btn-${t}`).classList.remove('active');
-                document.getElementById(`media-box-${t}`).classList.add('hidden');
-            });
-
-            document.getElementById(`tab-btn-${type}`).classList.add('active');
-            document.getElementById(`media-box-${type}`).classList.remove('hidden');
-        }
-
-        // --- 5. MEDIA PREVIEW & PROCESSING ---
-        // Image Processing (Compressed Base64)
-        function previewSelectedImage(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const maxW = 800;
-                    const scale = maxW / img.width;
-                    
-                    canvas.width = maxW;
-                    canvas.height = img.height * scale;
-                    
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    base64MediaData = canvas.toDataURL('image/jpeg', 0.7);
-
-                    const preview = document.getElementById('image-preview');
-                    preview.src = base64MediaData;
-                    preview.style.display = 'block';
-                };
-                img.src = evt.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        // Video Processing (Base64)
-        function previewSelectedVideo(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            if (file.size > 20 * 1024 * 1024) { // 20MB Max Limit
-                alert("File size bahut badi hai! Kripya 20MB se chhoti video upload karein.");
-                e.target.value = "";
+        // ----------------------------------------------------
+        // SUBMIT NEWS TO FIREBASE (`pendingNews` node)
+        // ----------------------------------------------------
+        function submitNewsData(e) {
+            e.preventDefault();
+            if (!currentReporter) {
+                alert("लॉगिन सत्र समाप्त हो गया है। कृपया पुनः लॉगिन करें।");
+                handleLogout();
                 return;
             }
 
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                base64MediaData = evt.target.result;
-                const preview = document.getElementById('video-preview');
-                preview.src = base64MediaData;
-                preview.style.display = 'block';
+            const submitBtn = document.getElementById("submitNewsBtn");
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i><span>भेजा जा रहा है...</span>';
+
+            const newsData = {
+                category: document.getElementById("newsCategory").value,
+                location: document.getElementById("newsLocation").value,
+                title: document.getElementById("newsTitle").value,
+                content: document.getElementById("newsContent").value,
+                image: document.getElementById("compressedImageBase64").value || "",
+                video: document.getElementById("videoDataUrl").value || "",
+                youtube: document.getElementById("newsYoutube").value || "",
+                reporterId: currentReporter.id || currentReporter.username,
+                reporterName: currentReporter.name,
+                timestamp: Date.now(),
+                dateString: new Date().toLocaleDateString('hi-IN', { day: '2-digit', month: 'short', year: 'numeric' }),
+                status: "Pending"
             };
-            reader.readAsDataURL(file);
+
+            db.ref("pendingNews").push(newsData)
+                .then(() => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>सुपर एडमिन को भेजें</span>';
+                    document.getElementById("newsForm").reset();
+                    document.getElementById("compressedImageBase64").value = "";
+                    document.getElementById("videoDataUrl").value = "";
+                    showToast("खबर सफलतापूर्वक सुपर एडमिन के पास भेज दी गई है!", "success");
+                    switchTab('historyNews');
+                })
+                .catch((error) => {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i><span>सुपर एडमिन को भेजें</span>';
+                    alert("खबर सबमिट करने में विफल: " + error.message);
+                });
         }
 
-        // --- 6. SUBMIT NEWS ARTICLE ---
-        document.getElementById('news-form').addEventListener('submit', (e) => {
-            e.preventDefault();
+        // ----------------------------------------------------
+        // LOAD REPORTER HISTORY
+        // ----------------------------------------------------
+        function loadReporterHistory() {
+            if (!currentReporter) return;
+            const tbody = document.getElementById("historyTableBody");
+            tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner animate-spin mr-2"></i> खबरें लोड हो रही हैं...</td></tr>';
 
-            const title = document.getElementById('news-title').value.trim();
-            const category = document.getElementById('news-category').value;
-            const content = document.getElementById('news-content').value.trim();
-            const district = currentReporter.district || 'General';
+            const reporterId = currentReporter.id || currentReporter.username;
+            const reporterName = currentReporter.name;
 
-            let mediaUrl = "";
-            if (selectedMediaType === "youtube") {
-                mediaUrl = document.getElementById('news-youtube-url').value.trim();
-            } else {
-                mediaUrl = base64MediaData;
-            }
+            const nodes = ["pendingNews", "approvedNews", "rejectedNews"];
+            let allHistory = [];
+            let fetchedCount = 0;
 
-            const newPostRef = db.ref('pendingNews').push();
-            const payload = {
-                id: newPostRef.key,
-                title: title,
-                category: category,
-                content: content,
-                district: district,
-                mediaType: selectedMediaType, // 'image', 'video', or 'youtube'
-                image: selectedMediaType === 'image' ? mediaUrl : '', // backward compatibility
-                videoUrl: selectedMediaType === 'video' ? mediaUrl : '',
-                youtubeUrl: selectedMediaType === 'youtube' ? mediaUrl : '',
-                reporterUsername: currentReporter.username,
-                reporterName: currentReporter.fullname || currentReporter.username,
-                status: 'pending',
-                timestamp: firebase.database.ServerValue.TIMESTAMP
-            };
-
-            newPostRef.set(payload).then(() => {
-                alert('आपकी ख़बर (Media के साथ) सफलतापूर्वक Super Admin को भेज दी गई है!');
-                document.getElementById('news-form').reset();
-                document.getElementById('image-preview').style.display = 'none';
-                document.getElementById('video-preview').style.display = 'none';
-                base64MediaData = "";
-                switchTab('history');
-            }).catch(err => alert('Error submitting news: ' + err.message));
-        });
-
-        // --- 7. LOAD REPORTER HISTORY ---
-        function loadMyHistory() {
-            const username = currentReporter.username;
-            const tbody = document.getElementById('my-history-tbody');
-
-            Promise.all([
-                db.ref('pendingNews').once('value'),
-                db.ref('approvedNews').once('value'),
-                db.ref('rejectedNews').once('value')
-            ]).then(snapshots => {
-                tbody.innerHTML = '';
-                let myList = [];
-
-                snapshots.forEach((snap, idx) => {
-                    const data = snap.val() || {};
-                    Object.keys(data).forEach(k => {
-                        if (data[k].reporterUsername === username) {
-                            myList.push({
-                                ...data[k],
-                                listType: idx === 0 ? 'Pending' : (idx === 1 ? 'Approved' : 'Rejected')
+            nodes.forEach(node => {
+                db.ref(node).once("value")
+                    .then(snapshot => {
+                        if (snapshot.exists()) {
+                            snapshot.forEach(child => {
+                                const item = child.val();
+                                if (item.reporterId === reporterId || item.reporterName === reporterName) {
+                                    allHistory.push({
+                                        id: child.key,
+                                        node: node,
+                                        ...item
+                                    });
+                                }
                             });
                         }
+                        fetchedCount++;
+                        if (fetchedCount === nodes.length) {
+                            renderHistoryTable(allHistory);
+                        }
+                    })
+                    .catch(() => {
+                        fetchedCount++;
+                        if (fetchedCount === nodes.length) {
+                            renderHistoryTable(allHistory);
+                        }
                     });
-                });
-
-                if (myList.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">You have not submitted any news articles yet.</td></tr>';
-                    return;
-                }
-
-                myList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-
-                myList.forEach(item => {
-                    const typeLabel = item.mediaType ? item.mediaType.toUpperCase() : 'IMAGE';
-                    const dateStr = item.timestamp ? new Date(item.timestamp).toLocaleDateString() : '-';
-                    
-                    let pillClass = 'pill-pending';
-                    if (item.listType === 'Approved') pillClass = 'pill-approved';
-                    if (item.listType === 'Rejected') pillClass = 'pill-rejected';
-
-                    tbody.innerHTML += `
-                        <tr>
-                            <td><strong>${typeLabel}</strong></td>
-                            <td><strong>${escapeHtml(item.title || 'Untitled')}</strong></td>
-                            <td>${item.category || '-'}</td>
-                            <td>${dateStr}</td>
-                            <td><span class="status-pill ${pillClass}">${item.listType}</span></td>
-                        </tr>
-                    `;
-                });
             });
         }
 
-        function escapeHtml(text) {
-            return String(text)
-                .replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;")
-                .replace(/'/g, "&#039;");
+        function renderHistoryTable(historyList) {
+            const tbody = document.getElementById("historyTableBody");
+            tbody.innerHTML = "";
+
+            if (historyList.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="4" class="p-6 text-center text-slate-400">आपने अभी तक कोई खबर सबमिट नहीं की है।</td></tr>';
+                return;
+            }
+
+            historyList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+            historyList.forEach(news => {
+                let statusBadge = '';
+                if (news.node === 'pendingNews' || news.status === 'Pending') {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800"><i class="fa-solid fa-hourglass-half mr-1"></i> लंबित (Pending)</span>';
+                } else if (news.node === 'approvedNews' || news.status === 'Approved') {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800"><i class="fa-solid fa-circle-check mr-1"></i> स्वीकृत (Approved)</span>';
+                } else if (news.node === 'rejectedNews' || news.status === 'Rejected') {
+                    statusBadge = '<span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-rose-100 text-rose-800"><i class="fa-solid fa-circle-xmark mr-1"></i> अस्वीकृत (Rejected)</span>';
+                }
+
+                const tr = document.createElement("tr");
+                tr.className = "hover:bg-slate-50/80 transition";
+                tr.innerHTML = `
+                    <td class="p-3">
+                        <p class="font-bold text-slate-800 line-clamp-1">${escapeHtml(news.title)}</p>
+                        <span class="text-xs px-2 py-0.5 bg-indigo-50 text-indigo-700 rounded font-medium">${escapeHtml(news.category)}</span>
+                    </td>
+                    <td class="p-3 text-slate-600 text-xs">${escapeHtml(news.location)}</td>
+                    <td class="p-3 text-slate-500 text-xs">${news.dateString || 'अज्ञात तारीख'}</td>
+                    <td class="p-3 text-center">${statusBadge}</td>
+                `;
+                tbody.appendChild(tr);
+            });
         }
 
-        window.onload = function() {
-            checkSession();
-        };
+        // ----------------- TOAST HELPER -----------------
+        function showToast(message, type = "success") {
+            const toast = document.getElementById("toastNotification");
+            const toastMsg = document.getElementById("toastMessage");
+            const toastIcon = document.getElementById("toastIcon");
+
+            toastMsg.innerText = message;
+            if (type === "success") {
+                toastIcon.className = "fa-solid fa-circle-check text-emerald-400 text-lg";
+            } else {
+                toastIcon.className = "fa-solid fa-circle-info text-sky-400 text-lg";
+            }
+
+            toast.classList.remove("hidden", "translate-y-2");
+            setTimeout(() => {
+                toast.classList.add("hidden", "translate-y-2");
+            }, 3500);
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, 
+                tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag)
+            );
+        }
     </script>
 </body>
 </html>
