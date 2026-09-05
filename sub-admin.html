@@ -3,19 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>सब-एडमिन पैनल (Sub-Admin Dashboard)</title>
-    <!-- FontAwesome Icons -->
+    <title>सब-एडमिन पैनल - उत्तराखंड विजन</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Poppins -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <style>
         :root {
-            --primary: #800020; /* Burgundy / Shahi Red */
+            --primary: #800020;
             --primary-dark: #5c0017;
-            --secondary: #d4af37; /* Gold */
+            --secondary: #d4af37;
             --bg-color: #f4f6f9;
             --card-bg: #ffffff;
             --text-main: #333333;
@@ -27,456 +24,241 @@
             --sidebar-width: 260px;
         }
 
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Poppins', sans-serif;
-        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Poppins', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; min-height: 100vh; }
 
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            min-height: 100vh;
-        }
+        .sidebar { width: var(--sidebar-width); background: var(--card-bg); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; position: fixed; top: 0; bottom: 0; left: 0; z-index: 100; }
+        .sidebar-brand { padding: 20px; background: var(--primary); color: #fff; text-align: center; }
+        .sidebar-brand h2 { font-size: 18px; font-weight: 600; }
+        .sidebar-brand span { font-size: 11px; color: var(--secondary); }
+        .sidebar-menu { list-style: none; padding: 20px 0; flex-grow: 1; }
+        .sidebar-menu li a { display: flex; align-items: center; padding: 12px 20px; color: var(--text-main); text-decoration: none; font-size: 14px; font-weight: 500; border-left: 4px solid transparent; }
+        .sidebar-menu li a i { margin-right: 12px; font-size: 16px; color: var(--text-muted); width: 20px; text-align: center; }
+        .sidebar-menu li.active a { background: rgba(128, 0, 32, 0.05); color: var(--primary); border-left-color: var(--primary); }
+        .sidebar-menu li.active a i { color: var(--primary); }
 
-        /* --- Sidebar --- */
-        .sidebar {
-            width: var(--sidebar-width);
-            background: var(--card-bg);
-            border-right: 1px solid var(--border-color);
-            display: flex;
-            flex-direction: column;
-            position: fixed;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            z-index: 100;
-            transition: transform 0.3s ease;
-        }
+        .main-content { margin-left: var(--sidebar-width); flex-grow: 1; display: flex; flex-direction: column; }
+        .top-header { background: var(--card-bg); padding: 15px 30px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 99; }
+        .header-title h1 { font-size: 18px; color: var(--primary); font-weight: 600; }
+        
+        .content-body { padding: 30px; flex-grow: 1; }
+        .section-panel { display: none; }
+        .section-panel.active { display: block; }
 
-        .sidebar-brand {
-            padding: 20px;
-            background: var(--primary);
-            color: #fff;
-            text-align: center;
-        }
+        .card { background: var(--card-bg); border-radius: 8px; border: 1px solid var(--border-color); margin-bottom: 25px; overflow: hidden; }
+        .card-header { padding: 15px 20px; border-bottom: 1px solid var(--border-color); background: #fafafa; display: flex; justify-content: space-between; align-items: center; }
+        .card-header h3 { font-size: 15px; font-weight: 600; color: var(--primary); }
+        .card-body { padding: 20px; }
 
-        .sidebar-brand h2 {
-            font-size: 20px;
-            font-weight: 600;
-        }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .form-group { margin-bottom: 15px; }
+        .form-group.full { grid-column: span 2; }
+        .form-group label { display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; }
+        .form-control { width: 100%; padding: 10px 14px; border: 1px solid var(--border-color); border-radius: 6px; font-size: 14px; outline: none; background: #fff; }
+        .form-control:focus { border-color: var(--primary); }
+        textarea.form-control { resize: vertical; min-height: 100px; }
 
-        .sidebar-brand span {
-            font-size: 12px;
-            color: var(--secondary);
-        }
+        .btn { padding: 8px 16px; border-radius: 6px; border: none; cursor: pointer; font-size: 13px; font-weight: 500; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
+        .btn-primary { background: var(--primary); color: #fff; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: #fff; }
+        .btn-warning { background: var(--warning); color: #000; }
+        .btn-danger { background: var(--danger); color: #fff; }
+        .btn-sm { padding: 4px 10px; font-size: 11px; }
 
-        .sidebar-menu {
-            list-style: none;
-            padding: 20px 0;
-            overflow-y: auto;
-            flex-grow: 1;
-        }
-
-        .sidebar-menu li a {
-            display: flex;
-            align-items: center;
-            padding: 12px 20px;
-            color: var(--text-main);
-            text-decoration: none;
-            font-size: 14px;
-            font-weight: 500;
-            transition: all 0.2s;
-            border-left: 4px solid transparent;
-        }
-
-        .sidebar-menu li a i {
-            margin-right: 12px;
-            font-size: 16px;
-            color: var(--text-muted);
-            width: 20px;
-            text-align: center;
-        }
-
-        .sidebar-menu li a:hover, 
-        .sidebar-menu li.active a {
-            background: rgba(128, 0, 32, 0.05);
-            color: var(--primary);
-            border-left-color: var(--primary);
-        }
-
-        .sidebar-menu li.active a i {
-            color: var(--primary);
-        }
-
-        /* --- Main Content Area --- */
-        .main-content {
-            margin-left: var(--sidebar-width);
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* Top Header */
-        .top-header {
-            background: var(--card-bg);
-            padding: 15px 30px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 99;
-        }
-
-        .header-title h1 {
-            font-size: 18px;
-            color: var(--primary);
-            font-weight: 600;
-        }
-
-        .header-user {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .header-user span {
-            font-size: 14px;
-            font-weight: 500;
-        }
-
-        /* Content Body Sections */
-        .content-body {
-            padding: 30px;
-            flex-grow: 1;
-        }
-
-        .section-panel {
-            display: none;
-        }
-
-        .section-panel.active {
-            display: block;
-        }
-
-        /* Common Cards & Tables */
-        .card {
-            background: var(--card-bg);
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            margin-bottom: 25px;
-            overflow: hidden;
-        }
-
-        .card-header {
-            padding: 15px 20px;
-            border-bottom: 1px solid var(--border-color);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #fafafa;
-        }
-
-        .card-header h3 {
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .card-body {
-            padding: 20px;
-        }
-
-        /* Forms & Inputs */
-        .form-group {
-            margin-bottom: 15px;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 13px;
-            font-weight: 500;
-        }
-
-        .form-control {
-            width: 100%;
-            padding: 10px 14px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-control:focus {
-            border-color: var(--primary);
-        }
-
-        textarea.form-control {
-            resize: vertical;
-            min-height: 100px;
-        }
-
-        /* Buttons */
-        .btn {
-            padding: 8px 16px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 500;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: background 0.2s;
-            text-decoration: none;
-        }
-
-        .btn-primary {
-            background: var(--primary);
-            color: #fff;
-        }
-
-        .btn-primary:hover {
-            background: var(--primary-dark);
-        }
-
-        .btn-success {
-            background: var(--success);
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: #fff;
-        }
-
-        .btn-warning {
-            background: var(--warning);
-            color: #000;
-        }
-
-        .btn-sm {
-            padding: 5px 10px;
-            font-size: 12px;
-        }
-
-        /* Tables */
-        .table-responsive {
-            width: 100%;
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            text-align: left;
-            font-size: 13px;
-        }
-
-        th, td {
-            padding: 12px 15px;
-            border-bottom: 1px solid var(--border-color);
-        }
-
-        th {
-            background: #f8f9fa;
-            font-weight: 600;
-            color: var(--text-muted);
-        }
-
-        .table-thumb {
-            width: 50px;
-            height: 40px;
-            object-fit: cover;
-            border-radius: 4px;
-        }
+        table { width: 100%; border-collapse: collapse; text-align: left; font-size: 13px; }
+        th, td { padding: 12px 15px; border-bottom: 1px solid var(--border-color); }
+        th { background: #f8f9fa; font-weight: 600; color: var(--text-muted); }
 
         /* Login Overlay */
-        #loginOverlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .login-box {
-            background: #fff;
-            padding: 30px;
-            border-radius: 10px;
-            width: 100%;
-            max-width: 400px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            text-align: center;
-        }
-
-        .login-box h2 {
-            margin-bottom: 5px;
-            color: var(--primary);
-            font-size: 22px;
-        }
-
-        .login-box p {
-            color: var(--text-muted);
-            font-size: 13px;
-            margin-bottom: 20px;
-        }
-
-        /* Responsive Design */
-        @media(max-width: 768px) {
-            .sidebar {
-                transform: translateX(-100%);
-            }
-            .sidebar.mobile-open {
-                transform: translateX(0);
-            }
-            .main-content {
-                margin-left: 0;
-            }
-            .menu-toggle-btn {
-                display: inline-block !important;
-            }
-        }
-        .menu-toggle-btn {
-            display: none;
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: var(--primary);
-            margin-right: 15px;
-        }
+        #loginOverlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .login-box { background: #fff; padding: 30px; border-radius: 10px; width: 100%; max-width: 380px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); text-align: center; }
+        .login-box h2 { margin-bottom: 5px; color: var(--primary); font-size: 20px; }
+        .login-box p { color: var(--text-muted); font-size: 12px; margin-bottom: 20px; }
+        
+        .analytics-filters { display: grid; grid-template-columns: repeat(4, 1fr) auto; gap: 15px; align-items: end; background: #f8f9fa; padding: 15px; border-radius: 6px; margin-bottom: 20px; border: 1px solid var(--border-color); }
     </style>
 </head>
 <body>
 
-    <!-- Sub-Admin Login Screen -->
+    <!-- Permanent Login System Modal -->
     <div id="loginOverlay">
         <div class="login-box">
             <h2>सब-एडमिन लॉगिन</h2>
-            <p>अपने रिपोर्टर क्रेडेंशियल्स दर्ज करें</p>
-            <div class="form-group">
-                <input type="text" id="loginUsername" class="form-control" placeholder="यूजरनेम (Username)">
+            <p>पैनल का उपयोग करने के लिए लॉगिन करें (यूजरनेम: <b>sanjay</b> / पासवर्ड: <b>12345</b>)</p>
+            <div class="form-group" style="text-align: left;">
+                <label>यूजरनेम</label>
+                <input type="text" id="loginUsername" class="form-control" value="sanjay">
             </div>
-            <div class="form-group">
-                <input type="password" id="loginPassword" class="form-control" placeholder="पासवर्ड (Password)">
+            <div class="form-group" style="text-align: left;">
+                <label>पासवर्ड</label>
+                <input type="password" id="loginPassword" class="form-control" value="12345">
             </div>
-            <button class="btn btn-primary" style="width: 100%; justify-content: center;" onclick="subAdminLogin()">लॉगिन करें</button>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center; margin-top: 5px;" onclick="handleLogin()">लॉगिन करें</button>
         </div>
     </div>
 
-    <!-- Sidebar Navigation -->
-    <div class="sidebar" id="sidebar">
+    <!-- Sidebar -->
+    <div class="sidebar">
         <div class="sidebar-brand">
             <h2>सब-एडमिन पैनल</h2>
-            <span id="reporterDistrictBadge">रिपोर्टर पोर्टल</span>
+            <span id="reporterDistrictBadge">हल्द्वानी, नैनीताल</span>
         </div>
         <ul class="sidebar-menu">
-            <li class="active" onclick="switchSection('addNewsSection', this)">
-                <a href="#"><i class="fa-solid fa-pen-nib"></i> खबर भेजें (Add News)</a>
-            </li>
-            <li onclick="switchSection('myNewsSection', this)">
-                <a href="#"><i class="fa-solid fa-list-check"></i> मेरी खबरें (My News Status)</a>
-            </li>
-            <li onclick="subAdminLogout()">
-                <a href="#" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket" style="color: var(--danger);"></i> लॉग आउट</a>
-            </li>
+            <li class="active" onclick="switchSection('addNewsSection', this)"><a href="#"><i class="fa-solid fa-pen-nib"></i> खबर भेजें</a></li>
+            <li onclick="switchSection('myNewsSection', this)"><a href="#"><i class="fa-solid fa-list-check"></i> मेरी खबरें (Status)</a></li>
+            <li onclick="switchSection('analyticsSection', this)"><a href="#"><i class="fa-solid fa-chart-line"></i> एनालिटिक्स (रिपोर्ट्स)</a></li>
+            <li onclick="handleLogout()"><a href="#" style="color: var(--danger);"><i class="fa-solid fa-right-from-bracket"></i> लॉग आउट</a></li>
         </ul>
     </div>
 
-    <!-- Main Content -->
+    <!-- Main Content Area -->
     <div class="main-content">
-        <!-- Top Header -->
         <div class="top-header">
-            <div style="display: flex; align-items: center;">
-                <button class="menu-toggle-btn" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
-                <div class="header-title">
-                    <h1 id="pageTitle">खबर भेजें</h1>
-                </div>
-            </div>
-            <div class="header-user">
-                <span id="loggedInReporterName">सुविधा रिपोर्टर</span>
-                <button class="btn btn-danger btn-sm" onclick="subAdminLogout()"><i class="fa-solid fa-power-off"></i></button>
-            </div>
+            <div class="header-title"><h1 id="pageTitle">खबर भेजें</h1></div>
+            <div><b id="loggedInName" style="color: var(--primary);">Sanjay</b></div>
         </div>
 
-        <!-- Content Body -->
         <div class="content-body">
-
-            <!-- 1. Add News Section (खबर भेजें) -->
+            
+            <!-- 1. Add News Section -->
             <div id="addNewsSection" class="section-panel active">
                 <div class="card">
-                    <div class="card-header">
-                        <h3>नवीन समाचार प्रविष्टि (Submit New Report)</h3>
-                    </div>
+                    <div class="card-header"><h3>नवीन समाचार प्रविष्टि</h3></div>
                     <div class="card-body">
-                        <div class="form-group">
-                            <label>समाचार शीर्षक (News Title)</label>
-                            <input type="text" id="newsTitle" class="form-control" placeholder="यहाँ शीर्षक लिखें...">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>समाचार शीर्षक (News Title)</label>
+                                <input type="text" id="newsTitle" class="form-control" placeholder="शीर्षक यहाँ लिखें...">
+                            </div>
+                            <div class="form-group">
+                                <label>श्रेणी (Category)</label>
+                                <select id="newsCategory" class="form-control">
+                                    <option value="राज्य">राज्य</option>
+                                    <option value="देश">देश</option>
+                                    <option value="राजनीति">राजनीति</option>
+                                    <option value="अपराध">अपराध</option>
+                                    <option value="मनोरंजन">मनोरंजन</option>
+                                    <option value="खेल">खेल</option>
+                                    <option value="व्यापार">व्यापार</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>श्रेणी (Category)</label>
-                            <select id="newsCategory" class="form-control">
-                                <option value="राज्य">राज्य</option>
-                                <option value="देश">देश</option>
-                                <option value="राजनीति">राजनीति</option>
-                                <option value="अपराध">अपराध</option>
-                                <option value="मनोरंजन">मनोरंजन</option>
-                                <option value="खेल">खेल</option>
-                                <option value="व्यापार">व्यापार</option>
-                            </select>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>जिला / क्षेत्र</label>
+                                <input type="text" id="newsDistrict" class="form-control" value="हल्द्वानी, नैनीताल">
+                            </div>
+                            <div class="form-group">
+                                <label>YouTube वीडियो लिंक (वैकल्पिक / Optional)</label>
+                                <input type="text" id="newsYoutubeUrl" class="form-control" placeholder="https://www.youtube.com/watch?v=...">
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>जिला / क्षेत्र (District)</label>
-                            <input type="text" id="newsDistrict" class="form-control" placeholder="उदा. हल्द्वानी, नैनीताल">
+
+                        <div class="form-group full">
+                            <label>इमेज या वीडियो अपलोड करें (फाइल चुनें या लिंक दर्ज करें)</label>
+                            <input type="file" id="newsMediaFile" class="form-control" accept="image/*,video/*" style="padding: 7px; margin-bottom: 8px;">
+                            <input type="text" id="newsMediaUrl" class="form-control" placeholder="या सीधा इमेज/वीडियो का URL यहाँ पेस्ट करें">
                         </div>
-                        <div class="form-group">
-                            <label>मुख्य फोटो / वीडियो (Media Upload)</label>
-                            <input type="file" id="newsImageFile" class="form-control" accept="image/*,video/*" onchange="handleNewsFileUpload(this)">
-                            <input type="hidden" id="newsImageUrl">
-                            <div id="newsMediaPreview" style="margin-top: 10px;"></div>
-                        </div>
-                        <div class="form-group">
+
+                        <div class="form-group full">
                             <label>समाचार विवरण (News Content)</label>
                             <textarea id="newsContent" class="form-control" placeholder="विस्तृत समाचार यहाँ टाइप करें..."></textarea>
                         </div>
-                        <button class="btn btn-primary" onclick="submitNewsToAdmin()"><i class="fa-solid fa-paper-plane"></i> एडमिन को भेजें (Submit for Approval)</button>
+
+                        <button class="btn btn-primary" onclick="submitNews()"><i class="fa-solid fa-paper-plane"></i> एडमिन को भेजें</button>
                     </div>
                 </div>
             </div>
 
-            <!-- 2. My News Status Section (मेरी खबरें) -->
+            <!-- 2. My News Status Section -->
             <div id="myNewsSection" class="section-panel">
                 <div class="card">
-                    <div class="card-header">
-                        <h3>मेरी भेजी गई खबरें और स्थिति (My Submissions Status)</h3>
-                    </div>
+                    <div class="card-header"><h3>मेरी भेजी गई खबरों की स्थिति</h3></div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>मीडिया</th>
-                                        <th>शीर्षक</th>
-                                        <th>जिला</th>
-                                        <th>स्थिति (Status)</th>
-                                        <th>दिनांक</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="myNewsTable">
-                                    <!-- Dynamic rows loaded here -->
-                                </tbody>
-                            </table>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>शीर्षक</th>
+                                    <th>श्रेणी</th>
+                                    <th>जिला</th>
+                                    <th>स्थिति</th>
+                                    <th>दिनांक</th>
+                                </tr>
+                            </thead>
+                            <tbody id="myNewsTable">
+                                <tr><td colspan="5" style="text-align:center;">लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. Date Range & Month wise Analytics Section -->
+            <div id="analyticsSection" class="section-panel">
+                <div class="card">
+                    <div class="card-header"><h3>कार्य निष्पादन एनालिटिक्स (Analytics)</h3></div>
+                    <div class="card-body">
+                        <div class="analytics-filters">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>माह अनुसार फ़िल्टर</label>
+                                <select id="filterMonth" class="form-control" onchange="filterAnalytics()">
+                                    <option value="all">सभी महीने</option>
+                                    <option value="0">जनवरी</option><option value="1">फरवरी</option><option value="2">मार्च</option>
+                                    <option value="3">अप्रैल</option><option value="4">मई</option><option value="5">जून</option>
+                                    <option value="6">जुलाई</option><option value="7">अगस्त</option><option value="8">सितंबर</option>
+                                    <option value="9">अक्टूबर</option><option value="10">नवंबर</option><option value="11">दिसंबर</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>कब से (From Date)</label>
+                                <input type="date" id="filterFromDate" class="form-control" onchange="filterAnalytics()">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label>कब तक (To Date)</label>
+                                <input type="date" id="filterToDate" class="form-control" onchange="filterAnalytics()">
+                            </div>
+                            <div style="align-self: end;">
+                                <button class="btn btn-warning" onclick="resetFilters()" style="width: 100%;"><i class="fa-solid fa-rotate-left"></i> रीसेट</button>
+                            </div>
                         </div>
+
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-bottom: 25px;">
+                            <div class="card" style="margin-bottom:0; text-align:center; background:#fdfdfd;">
+                                <div class="card-body" style="padding:15px;">
+                                    <h4 style="font-size: 13px; color: var(--text-muted);">कुल भेजी गई खबरें</h4>
+                                    <p id="statTotal" style="font-size: 24px; font-weight: 700; color: var(--primary);">0</p>
+                                </div>
+                            </div>
+                            <div class="card" style="margin-bottom:0; text-align:center; background:#fdfdfd;">
+                                <div class="card-body" style="padding:15px;">
+                                    <h4 style="font-size: 13px; color: var(--text-muted);">समीक्षाधीन (Pending)</h4>
+                                    <p id="statPending" style="font-size: 24px; font-weight: 700; color: var(--warning);">0</p>
+                                </div>
+                            </div>
+                            <div class="card" style="margin-bottom:0; text-align:center; background:#fdfdfd;">
+                                <div class="card-body" style="padding:15px;">
+                                    <h4 style="font-size: 13px; color: var(--text-muted);">लाइव स्वीकृत (Approved)</h4>
+                                    <p id="statApproved" style="font-size: 24px; font-weight: 700; color: var(--success);">0</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>शीर्षक</th>
+                                    <th>श्रेणी</th>
+                                    <th>मीडिया / यूट्यूब</th>
+                                    <th>स्थिति</th>
+                                    <th>दिनांक</th>
+                                </tr>
+                            </thead>
+                            <tbody id="analyticsTable">
+                                <tr><td colspan="5" style="text-align:center;">डेटा लोड हो रहा है...</td></tr>
+                            </tbody>
+                        </table>
                     </div>
                 </div>
             </div>
@@ -484,17 +266,15 @@
         </div>
     </div>
 
-    <!-- Firebase Configuration & Sub-Admin Script Integration -->
     <script>
-        // Your Firebase Configuration (Matched with Index & Admin)
         const firebaseConfig = {
-            apiKey: "AIzaSyD-your-api-key-here",
-            authDomain: "your-project-id.firebaseapp.com",
-            databaseURL: "https://your-project-id-default-rtdb.firebaseio.com",
-            projectId: "your-project-id",
-            storageBucket: "your-project-id.appspot.com",
-            messagingSenderId: "123456789012",
-            appId: "1:123456789012:web:abcdef123456"
+            apiKey: "AIzaSyD-your-api-key",
+            authDomain: "uttarakhand-vision.firebaseapp.com",
+            databaseURL: "https://uttarakhand-vision-default-rtdb.firebaseio.com",
+            projectId: "uttarakhand-vision",
+            storageBucket: "uttarakhand-vision.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:abcdef"
         };
 
         if (!firebase.apps.length) {
@@ -502,203 +282,220 @@
         }
         const db = firebase.database();
 
-        // Local state for current logged-in sub-admin (reporter)
-        let currentReporter = null;
+        let sessionUser = { id: 'sanjay_fixed_id', name: 'Sanjay', district: 'हल्द्वानी, नैनीताल' };
+        let globalNewsCache = [];
 
-        // Accessibility helper for media alts
-        function getMediaAlt(desc) {
-            return desc || "सब-एडमिन मीडिया पूर्वावलोकन";
-        }
-
-        // Sub-Admin Login Execution
-        function subAdminLogin() {
-            let uInput = document.getElementById('loginUsername').value.trim();
-            let pInput = document.getElementById('loginPassword').value.trim();
-
-            if(!uInput || !pInput) {
-                alert('कृपया यूजरनेम और पासवर्ड दर्ज करें!');
-                return;
-            }
-
-            db.ref('reporters').once('value', snap => {
-                let reporters = snap.val() || {};
-                let found = false;
-
-                for(let k in reporters) {
-                    let rep = reporters[k];
-                    if(rep.username === uInput && rep.password === pInput) {
-                        found = true;
-                        currentReporter = { id: k, ...rep };
-                        localStorage.setItem('subAdminUser', JSON.stringify(currentReporter));
-                        break;
-                    }
-                }
-
-                if(found) {
-                    initSubAdminSession();
-                } else {
-                    alert('अमान्य यूजरनेम या पासवर्ड! कृपया सही जानकारी दें।');
-                }
-            });
-        }
-
-        function initSubAdminSession() {
-            let saved = localStorage.getItem('subAdminUser');
-            if(saved) {
-                currentReporter = JSON.parse(saved);
+        function checkSession() {
+            let activeUser = localStorage.getItem('subAdminActive');
+            if (activeUser === 'true') {
                 document.getElementById('loginOverlay').style.display = 'none';
-                document.getElementById('loggedInReporterName').innerText = currentReporter.name;
-                document.getElementById('reporterDistrictBadge').innerText = currentReporter.district || 'रिपोर्टर पोर्टल';
-                document.getElementById('newsDistrict').value = currentReporter.district || '';
-                loadMyNews();
+                fetchAllNewsData();
+            } else {
+                document.getElementById('loginOverlay').style.display = 'flex';
             }
         }
 
-        function subAdminLogout() {
-            localStorage.removeItem('subAdminUser');
+        function handleLogin() {
+            let u = document.getElementById('loginUsername').value.trim();
+            let p = document.getElementById('loginPassword').value.trim();
+            if(u.toLowerCase() === 'sanjay' && p === '12345') {
+                localStorage.setItem('subAdminActive', 'true');
+                document.getElementById('loginOverlay').style.display = 'none';
+                fetchAllNewsData();
+            } else {
+                alert('गलत यूजरनेम या पासवर्ड! कृपया sanjay और 12345 दर्ज करें।');
+            }
+        }
+
+        function handleLogout() {
+            localStorage.removeItem('subAdminActive');
             location.reload();
         }
 
-        // Check active login on load
         window.onload = function() {
-            if(localStorage.getItem('subAdminUser')) {
-                initSubAdminSession();
-            }
-        }
+            checkSession();
+        };
 
-        // Sidebar Navigation Switcher
         function switchSection(sectionId, el) {
             document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
             document.querySelectorAll('.sidebar-menu li').forEach(l => l.classList.remove('active'));
-            
             document.getElementById(sectionId).classList.add('active');
             if(el) el.classList.add('active');
-
-            let titles = {
-                'addNewsSection': 'खबर भेजें',
-                'myNewsSection': 'मेरी खबरें'
-            };
-            document.getElementById('pageTitle').innerText = titles[sectionId] || 'डैशबोर्ड';
             
-            // Close mobile sidebar if open
-            document.getElementById('sidebar').classList.remove('mobile-open');
+            let titles = { 'addNewsSection': 'खबर भेजें', 'myNewsSection': 'मेरी खबरें स्थिति', 'analyticsSection': 'एनालिटिक्स रिपोर्ट्स' };
+            document.getElementById('pageTitle').innerText = titles[sectionId];
         }
 
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('mobile-open');
-        }
-
-        // Handle File Upload to Base64 (Compatible with Admin & Index layout)
-        function handleNewsFileUpload(input) {
-            if(input.files && input.files[0]) {
-                let file = input.files[0];
-                let reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('newsImageUrl').value = e.target.result;
-                    let preview = document.getElementById('newsMediaPreview');
-                    if(file.type.startsWith('video')) {
-                        preview.innerHTML = `<video src="${e.target.result}" controls style="max-height:150px; border-radius:6px;" aria-label="${getMediaAlt('वीडियो पूर्वावलोकन')}"></video>`;
-                    } else {
-                        preview.innerHTML = `<img src="${e.target.result}" style="max-height:150px; border-radius:6px;" alt="${getMediaAlt('छवि पूर्वावलोकन')}">`;
-                    }
-                }
-                reader.readAsDataURL(file);
-            }
-        }
-
-        // Submit News to Pending Queue for Admin Approval
-        function submitNewsToAdmin() {
+        function submitNews() {
             let title = document.getElementById('newsTitle').value.trim();
             let category = document.getElementById('newsCategory').value;
             let district = document.getElementById('newsDistrict').value.trim();
-            let imageUrl = document.getElementById('newsImageUrl').value.trim();
+            let youtubeUrl = document.getElementById('newsYoutubeUrl').value.trim();
+            let mediaUrl = document.getElementById('newsMediaUrl').value.trim();
             let content = document.getElementById('newsContent').value.trim();
+            let fileInput = document.getElementById('newsMediaFile');
 
-            if(!title || !content || !district) {
-                alert('कृपया शीर्षक, जिला और समाचार विवरण अवश्य भरें!');
+            if(!title || !content) {
+                alert('कृपया शीर्षक और समाचार विवरण अवश्य भरें!');
                 return;
             }
 
-            let newsPayload = {
-                title,
-                category,
-                district,
-                imageUrl,
-                content,
-                reporterName: currentReporter.name,
-                reporterId: currentReporter.id,
-                createdAt: Date.now(),
-                status: 'pending' // Flag picked up by main Admin panel
+            let processAndSave = (finalMediaUrl) => {
+                let newsData = {
+                    title,
+                    category,
+                    district,
+                    youtubeUrl,
+                    mediaUrl: finalMediaUrl || mediaUrl,
+                    content,
+                    reporterName: sessionUser.name,
+                    reporterId: sessionUser.id,
+                    createdAt: Date.now(),
+                    status: 'pending'
+                };
+
+                db.ref('pendingNews').push(newsData, (err) => {
+                    if(err) {
+                        alert('एरर: ' + err.message);
+                    } else {
+                        alert('खबर सफलतापूर्वक एडमिन के पास भेज दी गई है!');
+                        document.getElementById('newsTitle').value = '';
+                        document.getElementById('newsYoutubeUrl').value = '';
+                        document.getElementById('newsMediaUrl').value = '';
+                        document.getElementById('newsMediaFile').value = '';
+                        document.getElementById('newsContent').value = '';
+                        switchSection('myNewsSection', document.querySelectorAll('.sidebar-menu li')[1]);
+                        fetchAllNewsData();
+                    }
+                });
             };
 
-            db.ref('pendingNews').push(newsPayload, () => {
-                alert('आपकी खबर सफलतापूर्वक एडमिन के पास अप्रूवल के लिए भेज दी गई है!');
-                // Reset form
-                document.getElementById('newsTitle').value = '';
-                document.getElementById('newsImageUrl').value = '';
-                document.getElementById('newsContent').value = '';
-                document.getElementById('newsMediaPreview').innerHTML = '';
-                // Switch to my news tab
-                switchSection('myNewsSection', document.querySelectorAll('.sidebar-menu li')[1]);
+            if (fileInput.files && fileInput.files[0]) {
+                let reader = new FileReader();
+                reader.onload = function(e) {
+                    processAndSave(e.target.result);
+                };
+                reader.readAsDataURL(fileInput.files[0]);
+            } else {
+                processAndSave('');
+            }
+        }
+
+        function fetchAllNewsData() {
+            globalNewsCache = [];
+            
+            db.ref('pendingNews').on('value', pSnap => {
+                let pending = pSnap.val() || {};
+                db.ref('approvedNews').on('value', aSnap => {
+                    let approved = aSnap.val() || {};
+                    
+                    globalNewsCache = [];
+
+                    for(let id in pending) {
+                        if(pending[id].reporterName === sessionUser.name || pending[id].reporterId === sessionUser.id) {
+                            globalNewsCache.push({ id, ...pending[id], currentStatus: 'pending' });
+                        }
+                    }
+                    for(let id in approved) {
+                        if(approved[id].reporterName === sessionUser.name || approved[id].reporterId === sessionUser.id) {
+                            globalNewsCache.push({ id, ...approved[id], currentStatus: 'approved' });
+                        }
+                    }
+
+                    renderMyNewsTable(globalNewsCache);
+                    renderAnalytics(globalNewsCache);
+                });
             });
         }
 
-        // Load Pending & Approved News submitted by this specific Reporter
-        function loadMyNews() {
+        function renderMyNewsTable(data) {
             let table = document.getElementById('myNewsTable');
-            
-            // Check both pendingNews and approvedNews to show accurate status
-            db.ref('pendingNews').on('value', pendingSnap => {
-                let pendingData = pendingSnap.val() || {};
-                
-                db.ref('approvedNews').on('value', approvedSnap => {
-                    let approvedData = approvedSnap.val() || {};
-                    table.innerHTML = '';
-                    let hasData = false;
-
-                    // Render Pending Submissions
-                    for(let k in pendingData) {
-                        let item = pendingData[k];
-                        if(item.reporterId === currentReporter.id || item.reporterName === currentReporter.name) {
-                            hasData = true;
-                            let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb" alt="${getMediaAlt(item.title)}">` : '-';
-                            let pDate = new Date(item.createdAt).toLocaleDateString('hi-IN');
-                            table.innerHTML += `
-                                <tr>
-                                    <td>${mediaHtml}</td>
-                                    <td><strong>${item.title}</strong></td>
-                                    <td>${item.district}</td>
-                                    <td><span class="btn btn-warning btn-sm" style="cursor:default;">समीक्षाधीन (Pending)</span></td>
-                                    <td>${pDate}</td>
-                                </tr>
-                            `;
-                        }
-                    }
-
-                    // Render Approved Submissions (Live on Portal)
-                    for(let k in approvedData) {
-                        let item = approvedData[k];
-                        if(item.reporterId === currentReporter.id || item.reporterName === currentReporter.name) {
-                            hasData = true;
-                            let mediaHtml = item.imageUrl ? `<img src="${item.imageUrl}" class="table-thumb" alt="${getMediaAlt(item.title)}">` : '-';
-                            let pData = item.createdAt ? new Date(item.createdAt).toLocaleDateString('hi-IN') : '-';
-                            table.innerHTML += `
-                                <tr>
-                                    <td>${mediaHtml}</td>
-                                    <td><strong>${item.title}</strong></td>
-                                    <td>${item.district}</td>
-                                    <td><span class="btn btn-success btn-sm" style="cursor:default;"><i class="fa-solid fa-check"></i> लाइव (Published)</span></td>
-                                    <td>${pDate}</td>
-                                </tr>
-                            `;
-                        }
-                    }
-
-                    if(!hasData) {
-                        table.innerHTML = `<tr><td colspan="5" style="text-align:center; color: var(--text-muted);">आपने अभी तक कोई खबर नहीं भेजी है।</td></tr>`;
-                    }
-                });
+            table.innerHTML = '';
+            if(data.length === 0) {
+                table.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">कोई खबर उपलब्ध नहीं है।</td></tr>`;
+                return;
+            }
+            data.sort((a,b) => b.createdAt - a.createdAt).forEach(item => {
+                let badge = item.currentStatus === 'approved' 
+                    ? `<span class="btn btn-success btn-sm">लाइव स्वीकृत</span>` 
+                    : `<span class="btn btn-warning btn-sm">समीक्षाधीन</span>`;
+                table.innerHTML += `
+                    <tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.category}</td>
+                        <td>${item.district}</td>
+                        <td>${badge}</td>
+                        <td>${new Date(item.createdAt).toLocaleString('hi-IN')}</td>
+                    </tr>
+                `;
             });
+        }
+
+        // Analytics with From Date and To Date Range Filter logic
+        function renderAnalytics(data) {
+            let monthFilter = document.getElementById('filterMonth').value;
+            let fromDate = document.getElementById('filterFromDate').value;
+            let toDate = document.getElementById('filterToDate').value;
+
+            let filtered = data.filter(item => {
+                let itemDate = new Date(item.createdAt);
+                
+                // 1. Month Filter
+                let matchMonth = (monthFilter === 'all' || itemDate.getMonth() == monthFilter);
+
+                // 2. Date Range Filter (From - To)
+                let year = itemDate.getFullYear();
+                let month = String(itemDate.getMonth() + 1).padStart(2, '0');
+                let day = String(itemDate.getDate()).padStart(2, '0');
+                let itemDateStr = `${year}-${month}-${day}`;
+
+                let matchRange = true;
+                if(fromDate && toDate) {
+                    matchRange = (itemDateStr >= fromDate && itemDateStr <= toDate);
+                } else if(fromDate) {
+                    matchRange = (itemDateStr >= fromDate);
+                } else if(toDate) {
+                    matchRange = (itemDateStr <= toDate);
+                }
+
+                return matchMonth && matchRange;
+            });
+
+            document.getElementById('statTotal').innerText = filtered.length;
+            document.getElementById('statPending').innerText = filtered.filter(i => i.currentStatus === 'pending').length;
+            document.getElementById('statApproved').innerText = filtered.filter(i => i.currentStatus === 'approved').length;
+
+            let aTable = document.getElementById('analyticsTable');
+            aTable.innerHTML = '';
+            if(filtered.length === 0) {
+                aTable.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted);">इस अवधि में कोई डेटा नहीं मिला।</td></tr>`;
+                return;
+            }
+
+            filtered.sort((a,b) => b.createdAt - a.createdAt).forEach(item => {
+                let badge = item.currentStatus === 'approved' ? `<span class="btn btn-success btn-sm">लाइव</span>` : `<span class="btn btn-warning btn-sm">पेंडिंग</span>`;
+                let mediaInfo = item.youtubeUrl ? 'यूट्यूब लिंक' : (item.mediaUrl ? 'मीडिया फाइल/लिंक' : 'केवल टेक्स्ट');
+                aTable.innerHTML += `
+                    <tr>
+                        <td><strong>${item.title}</strong></td>
+                        <td>${item.category}</td>
+                        <td><small style="color:var(--primary);">${mediaInfo}</small></td>
+                        <td>${badge}</td>
+                        <td>${new Date(item.createdAt).toLocaleString('hi-IN')}</td>
+                    </tr>
+                `;
+            });
+        }
+
+        function filterAnalytics() {
+            renderAnalytics(globalNewsCache);
+        }
+
+        function resetFilters() {
+            document.getElementById('filterMonth').value = 'all';
+            document.getElementById('filterFromDate').value = '';
+            document.getElementById('filterToDate').value = '';
+            renderAnalytics(globalNewsCache);
         }
     </script>
 </body>
